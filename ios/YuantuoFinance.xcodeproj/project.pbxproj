@@ -1,0 +1,333 @@
+// !$*UTF8*$!
+{
+	"archiveVersion" = "1";
+	"classes" = {
+
+	};
+	"objectVersion" = "56";
+	"objects" = {
+		"8BF4A28E43F6CF370D3EE1C2" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Models.swift";
+			"sourceTree" = "<group>";
+		};
+		"1FF74371F464D48719DCC8A1" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "SecureStore.swift";
+			"sourceTree" = "<group>";
+		};
+		"B677C5330BD2E06E82F46B33" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "FinanceClient.swift";
+			"sourceTree" = "<group>";
+		};
+		"A9BCA438417D62B8BB39B2EE" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Views.swift";
+			"sourceTree" = "<group>";
+		};
+		"F721CB4B3F1EF79C3757AB07" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "EntryView.swift";
+			"sourceTree" = "<group>";
+		};
+		"946C143F97D40F9D81AEB496" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "YuantuoFinanceApp.swift";
+			"sourceTree" = "<group>";
+		};
+		"28AAD1477D5182D66D4B03B3" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "folder.assetcatalog";
+			"path" = "Assets.xcassets";
+			"sourceTree" = "<group>";
+		};
+		"26B2A637F7DC4079D5AB78A5" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "text.xml";
+			"path" = "PrivacyInfo.xcprivacy";
+			"sourceTree" = "<group>";
+		};
+		"7B594B6DB375E1BF3F23CDD6" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "text.plist.xml";
+			"path" = "Info.plist";
+			"sourceTree" = "<group>";
+		};
+		"3B98CD83066D4D35AB6DA1BA" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "text.plist.xml";
+			"path" = "Info-Debug.plist";
+			"sourceTree" = "<group>";
+		};
+		"38A007151ABE87CC01A5B6E9" = {
+			"isa" = "PBXFileReference";
+			"explicitFileType" = "wrapper.application";
+			"includeInIndex" = "0";
+			"path" = "YuantuoFinance.app";
+			"sourceTree" = "BUILT_PRODUCTS_DIR";
+		};
+		"FF7CE41F51E3ADB0C6A5675A" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "8BF4A28E43F6CF370D3EE1C2";
+		};
+		"90064E85CAB28FEE278C6A4C" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "1FF74371F464D48719DCC8A1";
+		};
+		"E174799A5E5B12DD570BF4DA" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "B677C5330BD2E06E82F46B33";
+		};
+		"34069CBB921139E261E1BCB0" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "A9BCA438417D62B8BB39B2EE";
+		};
+		"7BE063209DD1E97E4A26A546" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "F721CB4B3F1EF79C3757AB07";
+		};
+		"B1715AD02886CF5263B26D44" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "946C143F97D40F9D81AEB496";
+		};
+		"BCE16DD0260827ECF338C787" = {
+			"isa" = "PBXSourcesBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = (
+				"FF7CE41F51E3ADB0C6A5675A",
+				"90064E85CAB28FEE278C6A4C",
+				"E174799A5E5B12DD570BF4DA",
+				"34069CBB921139E261E1BCB0",
+				"7BE063209DD1E97E4A26A546",
+				"B1715AD02886CF5263B26D44",
+			);
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"E47A9C6905FB068B2F998FA3" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "28AAD1477D5182D66D4B03B3";
+		};
+		"EEEB734F3C08033375B90227" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "26B2A637F7DC4079D5AB78A5";
+		};
+		"0189424A5A60FED329FA868E" = {
+			"isa" = "PBXResourcesBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = (
+				"E47A9C6905FB068B2F998FA3",
+				"EEEB734F3C08033375B90227",
+			);
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"7561BFB015D8F536760CB671" = {
+			"isa" = "PBXFrameworksBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = (
+
+			);
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"E204D28A2874F6123747650D" = {
+			"isa" = "PBXShellScriptBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = (
+
+			);
+			"inputPaths" = (
+
+			);
+			"outputPaths" = (
+
+			);
+			"runOnlyForDeploymentPostprocessing" = "0";
+			"shellPath" = "/bin/sh";
+			"shellScript" = "if [ \"$CONFIGURATION\" = \"Release\" ]; then\n case \"$FINANCE_SERVER_URL\" in https://*) ;; *) echo \"error: Configure a real HTTPS server in Release.xcconfig\"; exit 1;; esac\n case \"$FINANCE_SERVER_URL\" in *localhost*|*127.0.0.1*|*example.com*|*'$'*) echo \"error: Invalid production server\"; exit 1;; esac\n [ -n \"$DEVELOPMENT_TEAM\" ] || { echo \"error: Configure Apple DEVELOPMENT_TEAM\"; exit 1; }\nfi\n";
+		};
+		"E0AB5DBA96896E45E60EA461" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "text.xcconfig";
+			"path" = "Debug.xcconfig";
+			"sourceTree" = "<group>";
+		};
+		"BD9BA6190166557A71B9FC4E" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "text.xcconfig";
+			"path" = "Production.xcconfig";
+			"sourceTree" = "<group>";
+		};
+		"ED8772ADEC3A6C25161BC957" = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Debug";
+			"buildSettings" = {
+				"CLANG_ENABLE_MODULES" = "YES";
+				"SWIFT_VERSION" = "5.0";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "17.0";
+				"SDKROOT" = "iphoneos";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf";
+			};
+		};
+		"00F209874A1F7309F6DCEAA7" = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Release";
+			"buildSettings" = {
+				"CLANG_ENABLE_MODULES" = "YES";
+				"SWIFT_VERSION" = "5.0";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "17.0";
+				"SDKROOT" = "iphoneos";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf-with-dsym";
+			};
+		};
+		"96316AF13F45443E4E9C4BA0" = {
+			"isa" = "XCConfigurationList";
+			"buildConfigurations" = (
+				"ED8772ADEC3A6C25161BC957",
+				"00F209874A1F7309F6DCEAA7",
+			);
+			"defaultConfigurationIsVisible" = "0";
+			"defaultConfigurationName" = "Release";
+		};
+		"4D8F54E7CBAF670D9F6C230D" = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Debug";
+			"baseConfigurationReference" = "E0AB5DBA96896E45E60EA461";
+			"buildSettings" = {
+				"PRODUCT_NAME" = "YuantuoFinance";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "com.luxinghe.yuantuofinance";
+				"MARKETING_VERSION" = "0.3.0";
+				"CURRENT_PROJECT_VERSION" = "3";
+				"TARGETED_DEVICE_FAMILY" = "1";
+				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+				"SUPPORTS_MACCATALYST" = "NO";
+				"SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD" = "NO";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"GENERATE_INFOPLIST_FILE" = "NO";
+				"ASSETCATALOG_COMPILER_APPICON_NAME" = "AppIcon";
+				"SWIFT_EMIT_LOC_STRINGS" = "YES";
+				"ENABLE_USER_SCRIPT_SANDBOXING" = "YES";
+				"LD_RUNPATH_SEARCH_PATHS" = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+			};
+		};
+		"1A6EFC2CD0AF63DD14BE0438" = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Release";
+			"baseConfigurationReference" = "BD9BA6190166557A71B9FC4E";
+			"buildSettings" = {
+				"PRODUCT_NAME" = "YuantuoFinance";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "com.luxinghe.yuantuofinance";
+				"MARKETING_VERSION" = "0.3.0";
+				"CURRENT_PROJECT_VERSION" = "3";
+				"TARGETED_DEVICE_FAMILY" = "1";
+				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+				"SUPPORTS_MACCATALYST" = "NO";
+				"SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD" = "NO";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"GENERATE_INFOPLIST_FILE" = "NO";
+				"ASSETCATALOG_COMPILER_APPICON_NAME" = "AppIcon";
+				"SWIFT_EMIT_LOC_STRINGS" = "YES";
+				"ENABLE_USER_SCRIPT_SANDBOXING" = "YES";
+				"LD_RUNPATH_SEARCH_PATHS" = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+			};
+		};
+		"EAD1C478648BB5F4F725A516" = {
+			"isa" = "XCConfigurationList";
+			"buildConfigurations" = (
+				"4D8F54E7CBAF670D9F6C230D",
+				"1A6EFC2CD0AF63DD14BE0438",
+			);
+			"defaultConfigurationIsVisible" = "0";
+			"defaultConfigurationName" = "Release";
+		};
+		"0E8A3AD980EC179856012B7E" = {
+			"isa" = "PBXNativeTarget";
+			"name" = "YuantuoFinance";
+			"productName" = "YuantuoFinance";
+			"productType" = "com.apple.product-type.application";
+			"productReference" = "38A007151ABE87CC01A5B6E9";
+			"buildConfigurationList" = "EAD1C478648BB5F4F725A516";
+			"buildPhases" = (
+				"E204D28A2874F6123747650D",
+				"BCE16DD0260827ECF338C787",
+				"7561BFB015D8F536760CB671",
+				"0189424A5A60FED329FA868E",
+			);
+			"buildRules" = (
+
+			);
+			"dependencies" = (
+
+			);
+		};
+		"96DC7B6B5526E30EFB51C316" = {
+			"isa" = "PBXGroup";
+			"children" = (
+				"8BF4A28E43F6CF370D3EE1C2",
+				"1FF74371F464D48719DCC8A1",
+				"B677C5330BD2E06E82F46B33",
+				"A9BCA438417D62B8BB39B2EE",
+				"F721CB4B3F1EF79C3757AB07",
+				"946C143F97D40F9D81AEB496",
+				"28AAD1477D5182D66D4B03B3",
+				"26B2A637F7DC4079D5AB78A5",
+				"7B594B6DB375E1BF3F23CDD6",
+				"3B98CD83066D4D35AB6DA1BA",
+			);
+			"path" = "YuantuoFinance";
+			"sourceTree" = "<group>";
+		};
+		"615B463D1028E4E24B674CF7" = {
+			"isa" = "PBXGroup";
+			"children" = (
+				"38A007151ABE87CC01A5B6E9",
+			);
+			"name" = "Products";
+			"sourceTree" = "<group>";
+		};
+		"42944EBC669F21BC22392EB5" = {
+			"isa" = "PBXGroup";
+			"children" = (
+				"96DC7B6B5526E30EFB51C316",
+				"E0AB5DBA96896E45E60EA461",
+				"BD9BA6190166557A71B9FC4E",
+				"615B463D1028E4E24B674CF7",
+			);
+			"sourceTree" = "<group>";
+		};
+		"98F54143AB4E86B28C3AFEE0" = {
+			"isa" = "PBXProject";
+			"attributes" = {
+				"BuildIndependentTargetsInParallel" = "YES";
+				"LastUpgradeCheck" = "2710";
+			};
+			"buildConfigurationList" = "96316AF13F45443E4E9C4BA0";
+			"compatibilityVersion" = "Xcode 14.0";
+			"developmentRegion" = "zh-Hans";
+			"knownRegions" = (
+				"zh-Hans",
+				"en",
+				"Base",
+			);
+			"mainGroup" = "42944EBC669F21BC22392EB5";
+			"productRefGroup" = "615B463D1028E4E24B674CF7";
+			"projectDirPath" = "";
+			"projectRoot" = "";
+			"targets" = (
+				"0E8A3AD980EC179856012B7E",
+			);
+		};
+	};
+	"rootObject" = "98F54143AB4E86B28C3AFEE0";
+}
