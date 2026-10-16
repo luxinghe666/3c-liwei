@@ -1,4 +1,4 @@
-/** All money is stored as integer cents. This file contains only simulated data. */
+/** Shared business rules. All money is stored as integer cents; createInitialState is demo-only. */
 export const money = cents => new Intl.NumberFormat('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format((Number(cents) || 0) / 100);
 
 const fail = message => { throw new Error(message); };
@@ -32,13 +32,22 @@ const moveCash = (state, accountId, amount, event, type, note = event.note) => {
   account.balance += amount;
   state.ledger.push({ id: nextId(state, 'txn'), date: event.date, type, accountId, amount, note: note || '', actionId: event.id });
 };
+export const proportionalProfit = (margin, paid, total) => {
+  // Avoid floating-point multiplication for large amounts; round ties toward +infinity, like Math.round.
+  const numerator = BigInt(margin) * BigInt(paid), denominator = BigInt(total);
+  let result = numerator / denominator;
+  const remainder = numerator % denominator;
+  if (remainder > 0n && remainder * 2n >= denominator) result++;
+  if (remainder < 0n && -remainder * 2n > denominator) result--;
+  return Number(result);
+};
 const recognize = (state, sale, amount, event) => {
   if (!amount) return;
   if (event.date < sale.date) fail('利润确认日期不能早于销售日期');
   // Corrections are expensed in their own month, so future receipts use originalFreight.
   const margin = sale.amount - sale.cost - sale.originalFreight;
   sale.paid += amount;
-  const cumulativeProfit = Math.round(margin * sale.paid / sale.amount);
+  const cumulativeProfit = proportionalProfit(margin, sale.paid, sale.amount);
   const profit = cumulativeProfit - sale.recognizedProfit;
   sale.recognizedProfit = cumulativeProfit;
   state.recognitions.push({ id: nextId(state, 'rec'), date: event.date, saleId: sale.id, amount, profit, note: event.note || '销售回款确认毛利', actionId: event.id });
