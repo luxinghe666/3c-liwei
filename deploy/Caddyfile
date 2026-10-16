@@ -1,0 +1,8 @@
+{
+    email {$ACME_EMAIL}
+    admin off
+}
+{$FINANCE_DOMAIN} {
+    encode zstd gzip
+    reverse_proxy app:4318
+}
