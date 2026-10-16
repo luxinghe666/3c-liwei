@@ -12,7 +12,7 @@
 
 ## 本机构建
 
-1. 安装并首次打开完整 Xcode。当前仅有 Command Line Tools，已下载 `~/Downloads/Xcode_27.1.xip`；执行环境无法初始化 xip 解压沙盒，需用户通过系统完成安装。
+1. 用户已安装并打开 Xcode。已核实完整 Xcode 27.1（27A9275）位于 `~/Downloads/Xcode.app`，包含 iOS / Simulator 27.1 SDK。当前系统默认开发路径可能仍为 Command Line Tools；终端构建应设置 `DEVELOPER_DIR` 为该 App 的 `Contents/Developer`。
 2. 打开 `ios/YuantuoFinance.xcodeproj`，选择共享 Scheme `YuantuoFinance` 和 iPhone 模拟器。Debug 默认访问 `http://127.0.0.1:4318`；本地先运行 `npm start` 并在浏览器创建测试账号。真机应连接可访问的 HTTPS 测试服务器，设备的 127.0.0.1 不是电脑地址。
 3. 正式构建前，复制 `ios/Release.example.xcconfig` 为 `ios/Release.xcconfig`，填写实际 Apple Team 和 HTTPS 地址。该文件已忽略，不提交账号配置。当前 Bundle ID 是草稿，须在开发者账号核实并注册。
 4. 配好签名后运行 `npm run ios:archive`，或在 Xcode 选择 Archive。构建脚本拒绝缺少 Team 或正式 HTTPS 地址。归档后在 Organizer 验证并上传 App Store Connect，不选择仅限内部测试的特殊分发包，以便后续走正式审核。
@@ -25,8 +25,9 @@
 - Swift 核心 29 项断言通过：金额精度/上限、非法输入、HTTPS 来源限制、待确认提交序列化、跨重启请求字节一致、服务端完整样本解码。
 - 全部 Swift 文件使用本机 Swift 6.4 与 macOS 26.5 SDK、macOS 14 目标通过类型检查。这验证共享 API/模型和 SwiftUI 语法，不代表已完成 iOS SDK 编译、模拟器或真机运行。
 - Xcode 工程和 plist 通过格式检查，1024 像素无透明通道图标已生成并查看。
+- `Models.swift`、`SecureStore.swift`、`FinanceClient.swift` 已用完整 Xcode 的 iPhone Simulator 27.1 SDK、iOS 17 目标通过类型检查。
 
-本机 macOS 27 SDK 的 SwiftUI 使用额外宏插件，而 Command Line Tools 未包含该插件，因此界面类型检查采用现有 macOS 26.5 SDK。后续必须用完整 Xcode 的 iOS SDK 重新构建验证，不能据此宣称已有安装包。
+完整 Xcode 已尝试模拟器构建：授予临时目录后解决了构建记录写入问题，但构建脚本仍在 `sandbox-exec: sandbox_apply: Operation not permitted` 处失败；单独检查 SwiftUI 时，苹果宏插件也因同一沙盒限制无法启动。CoreSimulator 服务连接失败，尚不能判断运行时是否安装完整。没有关闭 Xcode 的脚本沙盒或 Swift 插件安全机制。已请用户在本机 Xcode 窗口选择 iPhone 模拟器并运行，必要时下载模拟器组件。这些环境错误不代表已成功完成 iOS UI 编译或运行。
 
 ## 提交前仍需实际验证
 
