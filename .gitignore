@@ -1,0 +1,12 @@
+.DS_Store
+node_modules/
+.env
+.env.*
+!.env.example
+.openai/
+work/
+*.xlsx
+*.xls
+*.csv
+*.zip
+*.tar.gz

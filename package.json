@@ -1,0 +1,12 @@
+{
+  "name": "3c-finance-prototype",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "3C 供应链财务工作台交互原型（模拟数据）",
+  "scripts": {
+    "test": "node --test model.test.mjs regression.test.mjs",
+    "check": "node --check dist/app.js"
+  },
+  "engines": {"node": ">=20"}
+}
