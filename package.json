@@ -1,12 +1,13 @@
 {
-  "name": "3c-finance-prototype",
-  "version": "0.1.0",
+  "name": "3c-finance-workspace",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "3C 供应链财务工作台交互原型（模拟数据）",
+  "description": "3C 供应链财务工作台联机测试版",
   "scripts": {
-    "test": "node --test model.test.mjs regression.test.mjs",
-    "check": "node --check dist/app.js"
+    "start": "node server/start.mjs",
+    "test": "node --test model.test.mjs regression.test.mjs server.test.mjs",
+    "check": "node --check dist/app.js && node --check server/app.mjs && node --check dist/login.js"
   },
-  "engines": {"node": ">=20"}
+  "engines": {"node": ">=24.13.0"}
 }

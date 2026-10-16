@@ -10,3 +10,10 @@ work/
 *.csv
 *.zip
 *.tar.gz
+
+data/
+backups/
+.test-data/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
