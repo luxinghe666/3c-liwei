@@ -58,6 +58,30 @@ test('服务器账本：权限、并发与完整业务',async t=>{
     assert.equal((await f.request('commands',{client:f.client,body,headers:{'X-CSRF-Token':''}})).status,403);
     assert.equal((await f.state()).revision,0);
   });
+  await t.test('iPhone 汇总与同版本账本一致，月份和登录均校验',async()=>{
+    assert.equal((await f.request('workspace?month=2026-10')).status,401);
+    assert.equal((await f.request('workspace?month=2026-13',{client:f.client})).status,400);
+    const current=await f.state();
+    const r=await f.request('workspace?month=2026-10',{client:f.client});
+    assert.equal(r.status,200);assert.equal(r.data.revision,current.revision);
+    assert.deepEqual(r.data.state,current.state);assert.deepEqual(r.data.report,JSON.parse(JSON.stringify(summary(current.state,'2026-10'))));
+  });
+  await t.test('iPhone 仍须正确来源、登录和 CSRF，重试只入账一次',async child=>{
+    const m=await fixture(child);
+    const response=await m.request('login',{body:{username:'owner',password:PASSWORD},headers:{'X-Finance-Client':'ios'}});
+    assert.equal(response.status,200);
+    const mobile={cookie:response.cookie.split(';')[0],csrf:response.data.csrf};
+    const before=await m.state(),body={key:randomUUID(),revision:before.revision,action:{type:'master_create',kind:'products',name:'手机接口测试商品',date:'2026-10-16'}};
+    const headers={'X-Finance-Client':'ios'};
+    assert.equal((await m.request('commands',{body,headers,client:{}})).status,401);
+    assert.equal((await m.request('commands',{body,headers:{...headers,Origin:'https://evil.example'},client:mobile})).status,403);
+    assert.equal((await m.request('commands',{body,headers:{...headers,'X-CSRF-Token':''},client:mobile})).status,403);
+    assert.equal((await m.request('commands',{body,headers,client:mobile})).status,200);
+    assert.equal((await m.request('commands',{body,headers,client:mobile})).data.replayed,true);
+    assert.equal((await m.state()).revision,before.revision+1);
+    assert.equal((await m.request('logout',{body:{},headers,client:mobile})).status,200);
+    assert.equal((await m.request('workspace',{client:mobile})).status,401);
+  });
   await t.test('老板建立财务账号，财务不能管理成员或伪造老板角色',async()=>{
     const r=await f.request('users',{client:f.client,body:{username:'finance',name:'测试财务',role:'finance',password:PASSWORD}});assert.equal(r.status,201);
     finance=await f.login('finance');

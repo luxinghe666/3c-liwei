@@ -1,0 +1,46 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    init: true
+    environment:
+      APP_ORIGIN: https://${FINANCE_DOMAIN:?Set FINANCE_DOMAIN in .env}
+    volumes:
+      - finance_data:/app/data
+      - finance_backups:/app/backups
+    ports:
+      - "127.0.0.1:4318:4318"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    read_only: true
+    tmpfs: [/tmp]
+    healthcheck:
+      test: [CMD, node, server/health.mjs]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+  https:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      FINANCE_DOMAIN: ${FINANCE_DOMAIN:?Set FINANCE_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL:?Set ACME_EMAIL}
+    ports: ["80:80", "443:443", "443:443/udp"]
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app: {condition: service_healthy}
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+volumes:
+  finance_data:
+  finance_backups:
+  caddy_data:
+  caddy_config:

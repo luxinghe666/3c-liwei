@@ -17,3 +17,11 @@ backups/
 *.sqlite
 *.sqlite-wal
 *.sqlite-shm
+.build/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.ipa
+*.xcarchive/
+ios/Release.xcconfig
+ios/ExportOptions.plist
