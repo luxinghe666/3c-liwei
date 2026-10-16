@@ -1,0 +1,22 @@
+{
+  "status": "draft_not_submitted",
+  "name": "原拓财务",
+  "subtitle": "公司收支、往来与串号库存",
+  "primaryLanguage": "zh-Hans",
+  "suggestedPrimaryCategory": "BUSINESS",
+  "publisherType": "individual",
+  "supportEmail": "1921344174@qq.com",
+  "bundleIdentifierDraft": "com.luxinghe.yuantuofinance",
+  "skuDraft": "yuantuo-finance-2026",
+  "supportURL": null,
+  "privacyPolicyURL": null,
+  "copyrightHolder": null,
+  "reviewContactName": null,
+  "reviewContactPhone": null,
+  "reviewUsername": null,
+  "reviewPassword": null,
+  "description": "原拓财务为获得公司授权的员工提供经营账目查询与业务录入。\n\n经营概览：按月份查看回款确认毛利、公司费用、税费和调整，同时了解当前资金与往来余额。\n资金管理：查看公司业务账户余额和收支流水，登记客户收款、费用、内部转账与老板垫款。\n客户与供应商：查询客户欠款、销售记录、上游可用预付款和采购状态。\n商品库存：按型号或 SN 串号搜索，查看实际成本与在库状态，录入采购到货和销售退货。\n\n账号由公司管理员开通。App 与电脑端连接公司统一账本，使用前需要获得公司授权。",
+  "keywords": "财务,收支,往来,库存,串号,供应链,经营账",
+  "reviewNotesDraft": "本应用用于公司内部经营管理。账号由管理员开通，无公开注册、广告、内购或数字内容销售。请使用另行提供的独立演示账号；演示环境仅含虚构业务资料，与正式公司账本隔离。审核步骤：登录后查看经营概览，进入资金查看流水、往来查看客户、库存搜索串号，再通过经营页的记一笔验证收款或费用。以上演示环境、账号和真机流程必须实际完成并核验后才可提交，当前仍为草稿。",
+  "pending": ["会员与签名", "Bundle ID 与商店名称可用性", "正式 HTTPS 后台", "审核演示数据隔离", "发布地区及适用备案", "实际 iPhone 截图", "最终隐私资料与联系方式", "TestFlight 验收与 App Review"]
+}
