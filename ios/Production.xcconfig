@@ -1,0 +1,5 @@
+// Copy Release.example.xcconfig to Release.xcconfig after choosing the server and Apple team.
+#include? "Release.xcconfig"
+INFOPLIST_FILE = YuantuoFinance/Info.plist
+SWIFT_COMPILATION_MODE = wholemodule
+SWIFT_OPTIMIZATION_LEVEL = -O

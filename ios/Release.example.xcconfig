@@ -1,0 +1,5 @@
+// Required real values. This example is intentionally not buildable for distribution.
+DEVELOPMENT_TEAM =
+FINANCE_SERVER_URL =
+PRODUCT_BUNDLE_IDENTIFIER = com.luxinghe.yuantuofinance
+// URL syntax in xcconfig: https:/$()/your-domain
