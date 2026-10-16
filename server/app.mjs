@@ -3,10 +3,12 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { openStore } from './store.mjs';
+import { summary } from '../dist/model.js';
+import { today } from './book.mjs';
 import { HttpError, requireValue, text, username, hashPassword, verifyPassword, secret, digest, publicUser } from './security.mjs';
 
 const staticRoot = fileURLToPath(new URL('../dist/', import.meta.url));
-const files = new Set(['index.html','app.js','model.js','api.js','login.html','login.js','styles.css','app.css','auth.css','favicon.svg']);
+const files = new Set(['index.html','app.js','model.js','api.js','login.html','login.js','styles.css','app.css','auth.css','favicon.svg','privacy.html','support.html']);
 const contentTypes = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8', svg: 'image/svg+xml' };
 const SESSION_MS = 8 * 60 * 60 * 1000;
 export async function createApplication({ database, origin, allowSetup = false, logger = console }) {
@@ -64,7 +66,7 @@ export async function createApplication({ database, origin, allowSetup = false, 
         res.writeHead(200, { 'Content-Type': contentTypes[file.split('.').at(-1)] }); res.end(contents); return;
       }
       const isPost = req.method === 'POST';
-      if (isPost) requireValue(req.headers.origin === base.origin && req.headers['x-finance-client'] === 'web', '请求来源校验失败，请从本站重新登录', 403);
+      if (isPost) requireValue(req.headers.origin === base.origin && ['web','ios'].includes(req.headers['x-finance-client']), '请求来源校验失败，请重新登录', 403);
       let actor = session(req);
       if (url.pathname === '/api/session' && !isPost) { json(res,200,{ initialized: store.initialized(), setupAllowed: allowSetup, user: actor ? publicUser(actor) : null, csrf: actor?.csrf || null }); return; }
       const body = isPost ? await readBody(req) : null;
@@ -93,6 +95,12 @@ export async function createApplication({ database, origin, allowSetup = false, 
       requireValue(actor, '请先登录', 401);
       if (isPost) requireValue(req.headers['x-csrf-token'] === actor.csrf, '登录凭证已变化，请刷新后重试', 403);
       if (url.pathname === '/api/state' && !isPost) { json(res,200,store.getBook()); return; }
+      if (url.pathname === '/api/workspace' && !isPost) {
+        const month = url.searchParams.get('month') || today().slice(0,7);
+        requireValue(/^\d{4}-(0[1-9]|1[0-2])$/.test(month), '请输入有效月份');
+        const snapshot = store.getBook();
+        json(res,200,{...snapshot,month,report:summary(snapshot.state,month)}); return;
+      }
       if (url.pathname === '/api/commands' && isPost) { json(res,200,store.command(actor,body)); return; }
       if (url.pathname === '/api/logout' && isPost) {
         store.db.prepare('DELETE FROM sessions WHERE token=?').run(actor.token);
