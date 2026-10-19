@@ -4,6 +4,9 @@ import { dirname, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { newBook, executeAction, changedRecords } from './book.mjs';
 import { digest, requireValue, publicUser } from './security.mjs';
+import {correctBook,correctionHistory} from './corrections.mjs';
+import {summary} from '../dist/model.js';
+import {installNotifications,recordNotifications} from './notifications.mjs';
 
 export function openStore(filename) {
   mkdirSync(dirname(resolve(filename)), { recursive: true, mode: 0o700 });
@@ -19,6 +22,7 @@ export function openStore(filename) {
     CREATE TABLE IF NOT EXISTS journal(id INTEGER PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), request_key TEXT NOT NULL, request_hash TEXT NOT NULL, action TEXT NOT NULL, revision INTEGER NOT NULL UNIQUE, before_hash TEXT NOT NULL, after_hash TEXT NOT NULL, changes TEXT NOT NULL, created_at TEXT NOT NULL, UNIQUE(user_id,request_key));
     CREATE TABLE IF NOT EXISTS security_audit(id INTEGER PRIMARY KEY, user_id TEXT, event TEXT NOT NULL, detail TEXT NOT NULL, created_at TEXT NOT NULL);
     PRAGMA user_version=1;`);
+  installNotifications(db);
   const transaction = fn => {
     db.exec('BEGIN IMMEDIATE');
     try { const result = fn(); db.exec('COMMIT'); return result; }
@@ -30,8 +34,27 @@ export function openStore(filename) {
     requireValue(row, '请先初始化账本', 409);
     return { revision: row.revision, state: JSON.parse(row.state) };
   };
+  const history=()=>db.prepare('SELECT journal.*,users.name AS actor FROM journal JOIN users ON users.id=journal.user_id ORDER BY journal.id').all().map(r=>({...r,action:JSON.parse(r.action),changes:JSON.parse(r.changes)}));
+  const apply=(state,action,actor)=>action.type==='action_correct'?correctBook(state,action,actor,history()):executeAction(state,action,actor);
   return {
     db, transaction, audit, getBook,
+    operations:()=>correctionHistory(history()),
+    preview(actor,input){
+      const before=getBook();
+      requireValue(input.revision===before.revision,'账本已变化，请刷新后重新预览',409);
+      requireValue(input.action?.type==='action_correct','仅支持流水更正预览');
+      const result=apply(before.state,input.action,actor);
+      const months=[...new Set([...before.state.recognitions,...before.state.expenses,...before.state.adjustments,...result.state.recognitions,...result.state.expenses,...result.state.adjustments].map(r=>r.date.slice(0,7)))].sort();
+      const debt=(s,id)=>(s.payables||[]).filter(p=>p.supplierId===id).reduce((n,p)=>n+p.amount-p.paid-p.offset,0);
+      return {
+        revision:before.revision,
+        accounts:result.state.accounts.map(a=>({name:a.name,before:before.state.accounts.find(x=>x.id===a.id)?.balance||0,after:a.balance})),
+        customers:result.state.customers.map(a=>({name:a.name,before:before.state.customers.find(x=>x.id===a.id)?.balance||0,after:a.balance})),
+        suppliers:result.state.suppliers.flatMap(a=>[{name:a.name+' · 预付款',before:before.state.suppliers.find(x=>x.id===a.id)?.available||0,after:a.available},{name:a.name+' · 应付货款',before:debt(before.state,a.id),after:debt(result.state,a.id)}]),
+        boss:[{name:'公司欠老板',before:before.state.bossOwed,after:result.state.bossOwed}],
+        profits:months.map(month=>({name:month,before:summary(before.state,month).profit,after:summary(result.state,month).profit}))
+      };
+    },
     initialized: () => Boolean(db.prepare('SELECT id FROM book WHERE id=1').get()),
     setup(input) { return transaction(() => {
       requireValue(!db.prepare('SELECT id FROM book WHERE id=1').get(), '账本已初始化，请登录', 409);
@@ -54,11 +77,12 @@ export function openStore(filename) {
       }
       const before = getBook();
       requireValue(before.revision === input.revision, '账本已被其他操作更新，请刷新核对后重新保存', 409);
-      const result = executeAction(before.state, input.action, actor);
+      const result = apply(before.state, input.action, actor);
       const revision = before.revision + 1;
       const serialized = JSON.stringify(result.state);
       db.prepare('UPDATE book SET revision=?,state=? WHERE id=1').run(revision, serialized);
       db.prepare('INSERT INTO journal(user_id,request_key,request_hash,action,revision,before_hash,after_hash,changes,created_at) VALUES(?,?,?,?,?,?,?,?,?)').run(actor.id, input.key, requestHash, JSON.stringify(result.action), revision, digest(JSON.stringify(before.state)), digest(serialized), JSON.stringify(changedRecords(before.state, result.state)), new Date().toISOString());
+      recordNotifications(db,actor,result.action,revision,before.state,result.state);
       return { revision, state: result.state, replayed: false };
     }); },
     close: () => db.close(),

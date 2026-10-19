@@ -3,19 +3,23 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { openStore } from './store.mjs';
-import { summary } from '../dist/model.js';
+import { summary, dailySummary } from '../dist/model.js';
 import { today } from './book.mjs';
+import { createClientIpResolver } from './client-ip.mjs';
+import {aging,todoItems,profitAnalysis,reconciliationReport,customerStatement} from '../dist/insights.js';
+import {notificationList,readNotifications,registerDevice,unregisterDevice} from './notifications.mjs';
 import { HttpError, requireValue, text, username, hashPassword, verifyPassword, secret, digest, publicUser } from './security.mjs';
 
 const staticRoot = fileURLToPath(new URL('../dist/', import.meta.url));
-const files = new Set(['index.html','app.js','model.js','api.js','login.html','login.js','styles.css','app.css','auth.css','favicon.svg','privacy.html','support.html']);
+const files = new Set(['index.html','app.js','model.js','stock.js','insights.js','workflows.js','workflows.css','theme.css','galaxy.css','appearance.js','feedback.js','api.js','login.html','login.js','styles.css','app.css','auth.css','favicon.svg','privacy.html','support.html']);
 const contentTypes = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8', svg: 'image/svg+xml' };
 const SESSION_MS = 8 * 60 * 60 * 1000;
-export async function createApplication({ database, origin, allowSetup = false, logger = console }) {
+export async function createApplication({ database, origin, allowSetup = false, trustedProxyIp = '', logger = console, pushConfigured=false }) {
   const base = new URL(origin);
   requireValue(['http:', 'https:'].includes(base.protocol) && base.pathname === '/' && !base.username && !base.password && !base.search && !base.hash, 'APP_ORIGIN 必须是完整网站来源，例如 https://finance.example.com');
   const secure = base.protocol === 'https:';
   requireValue(secure || ['localhost', '127.0.0.1', '[::1]'].includes(base.hostname), '非本机访问必须配置 HTTPS');
+  const clientIp = createClientIpResolver(trustedProxyIp);
   const store = openStore(database);
   const dummyPassword = await hashPassword(secret());
   const json = (res, status, value, headers = {}) => {
@@ -56,6 +60,7 @@ export async function createApplication({ database, origin, allowSetup = false, 
     if (secure) res.setHeader('Strict-Transport-Security', 'max-age=31536000');
     try {
       requireValue(req.headers.host === base.host, '网站地址不匹配', 403);
+      const address = clientIp(req);
       const url = new URL(req.url, base);
       requireValue(['GET','POST'].includes(req.method), '请求方法不支持', 405);
       if (!url.pathname.startsWith('/api/')) {
@@ -73,36 +78,48 @@ export async function createApplication({ database, origin, allowSetup = false, 
       if (url.pathname === '/api/setup' && isPost) {
         requireValue(allowSetup, '请先在服务器本机初始化账本', 403);
         requireValue(!store.initialized(), '账本已初始化，请登录', 409);
-        throttle(`setup:${req.socket.remoteAddress}`);
+        throttle(`setup:${address}`);
         requireValue(['empty','demo'].includes(body.mode), '请选择空白测试账或演示测试账');
         const user = store.setup({ username: username(body.username), name: text(body.name, '姓名', 40), password: await hashPassword(body.password), mode: body.mode });
         createSession(user, res); return;
       }
       if (url.pathname === '/api/login' && isPost) {
         const normalized = username(body.username);
-        // Count before the expensive hash, including concurrent requests. No forwarded IP is trusted.
-        throttle(`ip:${req.socket.remoteAddress}`); throttle(`user:${normalized}`);
+        // Count before the expensive hash, including concurrent requests.
+        throttle(`ip:${address}`); throttle(`user:${normalized}`);
         const user = store.db.prepare('SELECT * FROM users WHERE username=?').get(normalized);
         const valid = await verifyPassword(body.password, user?.password || dummyPassword);
         // Recheck after await: a concurrent password reset or disable must invalidate login.
         const current = user && store.db.prepare('SELECT * FROM users WHERE id=?').get(user.id);
         requireValue(valid && current?.active && current.password === user.password, '账号或密码错误', 401);
-        store.db.prepare('DELETE FROM attempts WHERE key IN (?,?)').run(`user:${normalized}`, `ip:${req.socket.remoteAddress}`);
+        store.db.prepare('DELETE FROM attempts WHERE key IN (?,?)').run(`user:${normalized}`, `ip:${address}`);
         store.audit(user.id, 'login'); createSession(current, res); return;
       }
       // Reading a slow request body yields control; a different request may revoke this session meanwhile.
       actor = session(req);
       requireValue(actor, '请先登录', 401);
       if (isPost) requireValue(req.headers['x-csrf-token'] === actor.csrf, '登录凭证已变化，请刷新后重试', 403);
+      if(url.pathname==='/api/notifications'&&!isPost){json(res,200,{...notificationList(store.db,actor,url.searchParams.get('before')),pushConfigured});return;}
+      if(url.pathname==='/api/notifications/read'&&isPost){store.transaction(()=>readNotifications(store.db,actor,body));json(res,200,{ok:true});return;}
+      if(url.pathname==='/api/notifications/device'&&isPost){store.transaction(()=>registerDevice(store.db,actor,body));json(res,200,{ok:true});return;}
+      if(url.pathname==='/api/notifications/device/remove'&&isPost){unregisterDevice(store.db,actor,body.id);json(res,200,{ok:true});return;}
       if (url.pathname === '/api/state' && !isPost) { json(res,200,store.getBook()); return; }
       if (url.pathname === '/api/workspace' && !isPost) {
         const month = url.searchParams.get('month') || today().slice(0,7);
         requireValue(/^\d{4}-(0[1-9]|1[0-2])$/.test(month), '请输入有效月份');
         const snapshot = store.getBook();
-        json(res,200,{...snapshot,month,report:summary(snapshot.state,month)}); return;
+        const date = url.searchParams.get('date') || today();
+        let dailyReport;
+        try { dailyReport = dailySummary(snapshot.state,date); }
+        catch { throw new HttpError(400,'请输入有效统计日期'); }
+        json(res,200,{...snapshot,month,report:summary(snapshot.state,month),date,dailyReport,capabilities:{quantityInventory:true,operationNotifications:true},insights:{aging:aging(snapshot.state,today()),todos:todoItems(snapshot.state,today()),analysis:profitAnalysis(snapshot.state,month),reconciliations:reconciliationReport(snapshot.state)}}); return;
       }
+      if(url.pathname==='/api/operations'&&!isPost){json(res,200,{operations:store.operations()});return;}
+      if(url.pathname==='/api/correction-preview'&&isPost){json(res,200,store.preview(actor,body));return;}
+      if(url.pathname==='/api/statement'&&!isPost){const from=url.searchParams.get('from'),to=url.searchParams.get('to');const valid=d=>typeof d==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(d)&&!Number.isNaN(Date.parse(d))&&new Date(d+'T00:00:00Z').toISOString().slice(0,10)===d;requireValue(valid(from)&&valid(to)&&from<=to,'请选择有效账单起止日期');try{json(res,200,customerStatement(store.getBook().state,url.searchParams.get('customer'),from,to));}catch(e){throw new HttpError(400,e.message);}return;}
       if (url.pathname === '/api/commands' && isPost) { json(res,200,store.command(actor,body)); return; }
       if (url.pathname === '/api/logout' && isPost) {
+        unregisterDevice(store.db,actor,body.deviceId);
         store.db.prepare('DELETE FROM sessions WHERE token=?').run(actor.token);
         json(res,200,{ok:true},{'Set-Cookie':sessionCookie('',0)}); return;
       }
@@ -144,6 +161,7 @@ export async function createApplication({ database, origin, allowSetup = false, 
           if (body.active !== undefined) store.db.prepare('UPDATE users SET active=? WHERE id=?').run(Number(body.active),target.id);
           if (password) store.db.prepare('UPDATE users SET password=? WHERE id=?').run(password,target.id);
           store.db.prepare('DELETE FROM sessions WHERE user_id=?').run(target.id);
+          store.db.prepare('DELETE FROM notification_devices WHERE user_id=?').run(target.id);
           store.audit(actor.id,'user_updated',JSON.stringify({id:target.id,active:body.active,passwordReset:Boolean(password)}));
         });json(res,200,{ok:true});return;
       }

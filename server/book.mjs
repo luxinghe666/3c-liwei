@@ -1,5 +1,6 @@
 import { createInitialState, applyAction } from '../dist/model.js';
 import { requireValue, text, HttpError } from './security.mjs';
+import {extraFields,extraAction} from './operations.mjs';
 
 export function today() {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
@@ -8,19 +9,23 @@ export function newBook(mode) {
   if (mode === 'demo') return { ...createInitialState(), mode, invoices: [], closedMonths: ['2026-09'] };
   return {
     mode: 'empty', schemaVersion: 1, today: today(), sequence: 0,
-    accounts: ['acc-corp-1', 'acc-corp-2', 'acc-card-1', 'acc-card-2', 'acc-card-3', 'acc-card-4'].map((id, i) => ({ id, name: i < 2 ? `对公账户 ${i + 1}` : `业务账户 ${i - 1}`, type: i < 2 ? 'corporate' : 'business', balance: 0 })),
-    customers: [], suppliers: [], products: [], inventory: [], sales: [], purchases: [], ledger: [], recognitions: [], expenses: [], taxes: {}, adjustments: [], bossOwed: 0, audit: [], lastAction: null, invoices: [], closedMonths: [],
+    accounts: [],
+    customers: [], suppliers: [], products: [], inventory: [], sales: [], purchases: [], payables: [], ledger: [], recognitions: [], expenses: [], taxes: {}, adjustments: [], bossOwed: 0, audit: [], lastAction: null, invoices: [], closedMonths: [],
   };
 }
 const fields = {
   receipt: ['customerId', 'accountId', 'amount'], transfer: ['fromId', 'toId', 'amount'],
   boss_in: ['accountId', 'amount'], boss_pay: ['amount', 'category'], boss_repay: ['accountId', 'amount'],
   supplier_pay: ['accountId', 'supplierId', 'amount'], expense: ['accountId', 'amount', 'category'],
+  supplier_settle: ['payableId', 'accountId', 'amount'], supplier_offset: ['payableId', 'amount'],
   tax: ['month', 'amount'], freight_adjust: ['saleId', 'amount'],
-  purchase_lock: ['supplierId', 'productId', 'qty', 'unitPrice'], purchase_ship: ['purchaseId'],
-  purchase_receive: ['purchaseId', 'freight', 'sns'], sale_create: ['customerId', 'inventoryId', 'amount', 'freight'],
-  sale_return: ['saleId'], invoice: ['number', 'partner', 'direction', 'base', 'taxAmount'],
-  close_month: ['month'], reopen_month: ['month'], master_create: ['kind', 'name'], account_rename: ['accountId', 'name'],
+  purchase_lock: ['supplierId', 'productId', 'qty', 'unitPrice', 'settlementMode'], purchase_ship: ['purchaseId'],
+  purchase_receive: ['purchaseId', 'freight', 'sns'], sale_create: ['customerId', 'inventoryId', 'productId', 'qty', 'amount', 'freight'],
+  purchase_intake: ['supplierId', 'productId', 'qty', 'unitPrice', 'settlementMode', 'freight', 'sns', 'shippedDate'],
+  sale_return: ['saleId', 'qty'], invoice: ['number', 'partner', 'direction', 'base', 'taxAmount'],
+  close_month: ['month'], reopen_month: ['month'], master_create: ['kind', 'name', 'termDays'], account_rename: ['accountId', 'name'],
+  account_create: ['name', 'accountType', 'openingBalance'], account_update: ['accountId', 'name', 'accountType'],
+  ...extraFields,
 };
 function date(value) {
   requireValue(typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value), '请输入有效业务日期');
@@ -41,19 +46,26 @@ export function validateAction(raw) {
   if (raw.month) month(raw.month);
   if (raw.note !== undefined) requireValue(typeof raw.note === 'string' && raw.note.length <= 500, '备注最多 500 字');
   for (const [key, value] of Object.entries(raw)) {
-    if (['amount', 'unitPrice', 'freight', 'base', 'taxAmount'].includes(key)) requireValue(Number.isSafeInteger(value) && value >= 0 && value <= 1e12, '金额必须是有效整数分，且单笔不超过 100 亿元');
-    if (key === 'qty') requireValue(Number.isInteger(value) && value > 0 && value <= 1000, '单次入库数量须为 1–1000');
+    if (['amount', 'unitPrice', 'freight', 'base', 'taxAmount', 'openingBalance'].includes(key)) requireValue(Number.isSafeInteger(value) && value >= 0 && value <= 1e12, '金额必须是有效整数分，且单笔不超过 100 亿元');
+    if (key === 'qty') requireValue(Number.isInteger(value) && value > 0 && value <= 1000, '单次数量须为 1–1000');
     if (key.endsWith('Id')) text(value, key, 100);
     if (key === 'category') text(value, '费用类别', 60);
   }
   if (raw.sns !== undefined) requireValue(Array.isArray(raw.sns) && raw.sns.length <= 1000 && raw.sns.every(sn => typeof sn === 'string' && sn.length > 0 && sn.length <= 100), '串号格式无效');
+  if (raw.settlementMode !== undefined) requireValue(['prepaid', 'credit'].includes(raw.settlementMode), '请选择预付锁货或收货记应付');
+  if (raw.shippedDate !== undefined) date(raw.shippedDate);
+  if (raw.accountType !== undefined) requireValue(['corporate', 'business', 'cash', 'wallet', 'other'].includes(raw.accountType), '请选择有效账户类型');
+  if (raw.termDays !== undefined) requireValue(Number.isInteger(raw.termDays)&&raw.termDays>=0&&raw.termDays<=365,'账期须为 0–365 天');
+  if(raw.type==='sale_create'&&raw.productId!==undefined)requireValue(raw.inventoryId===undefined&&raw.qty!==undefined,'型号销售需填写数量，不能同时指定库存记录');
   return action;
 }
 
-export function executeAction(before, raw, actor) {
+export function executeAction(before, raw, actor, {replay=false}={}) {
   const action = validateAction(raw);
   const targetMonth = action.month || action.date.slice(0, 7);
   const periodAction = ['close_month', 'reopen_month'].includes(action.type);
+  if(before.opening&&!periodAction)requireValue(action.date>=before.opening.date,'业务日期不能早于期初启用日');
+  if(action.type==='stocktake'&&!replay)requireValue(action.date===today(),'盘点按当前库存核对，请使用今天的日期');
   if (periodAction) {
     requireValue(actor.role === 'owner', '只有老板可以关账或反关账', 403);
     month(action.month);
@@ -67,7 +79,9 @@ export function executeAction(before, raw, actor) {
     requireValue(sale && sale.paid === sale.amount, '当前只支持已收齐销售的月结运费补差');
   }
   let next;
-  if (periodAction || ['invoice', 'master_create', 'account_rename'].includes(action.type)) {
+  if(Object.hasOwn(extraFields,action.type)) {
+    next=extraAction(before,action,actor);
+  } else if (periodAction || ['invoice', 'master_create', 'account_rename', 'account_create', 'account_update'].includes(action.type)) {
     next = structuredClone(before);
     const id = `action-${++next.sequence}`;
     if (periodAction) {
@@ -86,13 +100,24 @@ export function executeAction(before, raw, actor) {
       requireValue(['customers', 'suppliers', 'products'].includes(action.kind), '请选择客户、供应商或商品');
       const name = text(action.name, '名称', 80);
       requireValue(!next[action.kind].some(row => row.name === name), '该名称已存在');
-      next[action.kind].push({ id: `${action.kind}-${++next.sequence}`, name, ...(action.kind === 'customers' ? { balance: 0, termDays: 3 } : action.kind === 'suppliers' ? { available: 0 } : { category: '串号商品' }) });
+      next[action.kind].push({ id: `${action.kind}-${++next.sequence}`, name, ...(action.kind === 'customers' ? { balance: 0, termDays: action.termDays??3 } : action.kind === 'suppliers' ? { available: 0 } : { category: '数量商品' }) });
     }
-    if (action.type === 'account_rename') {
-      requireValue(actor.role === 'owner', '只有老板可以修改账户名称', 403);
-      const account = next.accounts.find(a => a.id === action.accountId);
-      requireValue(account, '账户不存在');
-      account.name = text(action.name, '账户名称', 60);
+    if (['account_rename', 'account_create', 'account_update'].includes(action.type)) {
+      requireValue(actor.role === 'owner', '只有老板可以管理收付款账户', 403);
+      const name = text(action.name, '账户名称', 60);
+      requireValue(!next.accounts.some(a => a.id !== action.accountId && a.name.trim().toLocaleLowerCase() === name.toLocaleLowerCase()), '该账户名称已存在');
+      if (action.type !== 'account_rename') requireValue(['corporate', 'business', 'cash', 'wallet', 'other'].includes(action.accountType), '请选择有效账户类型');
+      if (action.type === 'account_create') {
+        const balance = action.openingBalance ?? 0;
+        const accountId = `account-${++next.sequence}`;
+        next.accounts.push({ id: accountId, name, type: action.accountType, balance, openingDate: action.date });
+        if (balance) next.ledger.push({ id: `txn-${++next.sequence}`, date: action.date, type: 'opening', accountId, amount: balance, note: '账户期初余额', actionId: id });
+      } else {
+        const account = next.accounts.find(a => a.id === action.accountId);
+        requireValue(account, '账户不存在');
+        account.name = name;
+        if (action.type === 'account_update') account.type = action.accountType;
+      }
     }
     next.lastAction = { id, type: action.type, date: action.date, note: action.note || action.name || '', payload: action };
     next.audit.push(next.lastAction);
