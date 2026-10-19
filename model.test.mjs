@@ -10,7 +10,7 @@ function fixture() {
   state.accounts.forEach(account => { account.balance = 1000000; });
   state.customers.forEach(customer => { customer.balance = 0; });
   state.suppliers.forEach(supplier => { supplier.available = 1000000; });
-  for (const key of ['inventory', 'sales', 'purchases', 'ledger', 'recognitions', 'expenses', 'adjustments', 'audit']) state[key] = [];
+  for (const key of ['inventory', 'sales', 'purchases', 'payables', 'ledger', 'recognitions', 'expenses', 'adjustments', 'audit']) state[key] = [];
   state.taxes = {};
   state.bossOwed = 0;
   state.lastAction = null;
@@ -134,6 +134,119 @@ test('SN 重复会原子拒绝，不入库、不改采购状态', () => {
   assert.throws(() => act(state, { type: 'purchase_receive', purchaseId: 'p', freight: 10, sns: ['DEMO-SAME', 'demo-same'] }), /不能.*重复/);
   assert.equal(state.inventory.length, 0);
   assert.equal(state.purchases[0].status, 'shipped');
+});
+
+function creditPurchase(state = fixture(), { date = '2026-10-12', receivedDate = DATE, freight = 381, qty = 2 } = {}) {
+  state = act(state, { type: 'purchase_lock', id: 'credit-purchase', supplierId: 'sup-1', productId: 'prod-1', qty, unitPrice: 325000, settlementMode: 'credit', date });
+  state = act(state, { type: 'purchase_ship', purchaseId: 'credit-purchase', date });
+  return act(state, { type: 'purchase_receive', purchaseId: 'credit-purchase', freight, sns: Array.from({ length: qty }, (_, index) => `CREDIT-SN-${index}`), date: receivedDate });
+}
+
+test('市场赊购实际收货才记应付，与预付款分别显示且不自动抵扣', () => {
+  let state = fixture();
+  const original = structuredClone(state);
+  const withoutPrepay = structuredClone(state); withoutPrepay.suppliers[0].available = 0;
+  const creditWithoutPrepay = act(withoutPrepay, { type: 'purchase_lock', supplierId: 'sup-1', productId: 'prod-1', qty: 1, unitPrice: 325000, settlementMode: 'credit' });
+  assert.equal(creditWithoutPrepay.suppliers[0].available, 0);
+  assert.equal(summary(creditWithoutPrepay).supplierPayables, 0);
+  state = act(state, { type: 'purchase_lock', id: 'credit', supplierId: 'sup-1', productId: 'prod-1', qty: 2, unitPrice: 325000, settlementMode: 'credit', date: '2026-10-12' });
+  assert.equal(summary(state).supplierPayables, 0);
+  assert.equal(state.suppliers[0].available, original.suppliers[0].available);
+  state = act(state, { type: 'purchase_ship', purchaseId: 'credit', date: '2026-10-13' });
+  assert.equal(summary(state).supplierPayables, 0);
+  state = act(state, { type: 'purchase_receive', purchaseId: 'credit', freight: 381, sns: ['CREDIT-A', 'CREDIT-B'] });
+  assert.equal(state.payables.length, 1);
+  assert.deepEqual({ ...state.payables[0], id: 'id', actionId: 'action' }, { id: 'id', supplierId: 'sup-1', purchaseId: 'credit', recognizedDate: DATE, amount: 650000, paid: 0, offset: 0, note: '', actionId: 'action' });
+  assert.equal(summary(state).supplierPayables, 650000);
+  assert.equal(summary(state).supplierAvailable, summary(original).supplierAvailable);
+  assert.equal(summary(state).totalCash, summary(original).totalCash);
+  assert.equal(summary(state).profit, 0);
+  assert.equal(state.inventory.reduce((total, row) => total + row.cost, 0), 650381);
+  assert.equal(state.ledger.length, 0);
+  assert.throws(() => act(state, { type: 'purchase_receive', purchaseId: 'credit', freight: 381, sns: ['CREDIT-A', 'CREDIT-B'] }), /不能重复入库/);
+});
+
+test('部分支付应付只减现金和欠款，不重复增加成本或扣减利润', () => {
+  let state = creditPurchase();
+  const before = structuredClone(state), payableId = state.payables[0].id;
+  state = act(state, { type: 'supplier_settle', payableId, accountId: 'acc-corp-1', amount: 100001 });
+  assert.equal(state.payables[0].paid, 100001);
+  assert.equal(summary(state).supplierPayables, 549999);
+  assert.equal(summary(state).totalCash, summary(before).totalCash - 100001);
+  assert.equal(state.suppliers[0].available, before.suppliers[0].available);
+  assert.deepEqual(state.inventory, before.inventory);
+  assert.equal(summary(state).profit, summary(before).profit);
+  const transaction = state.ledger.at(-1);
+  assert.equal(transaction.type, 'supplier_settle');
+  assert.equal(transaction.amount, -100001);
+  assert.equal(transaction.payableId, payableId);
+  assert.equal(transaction.purchaseId, 'credit-purchase');
+  assert.equal(transaction.supplierId, 'sup-1');
+  assert.equal(transaction.actionId, state.audit.at(-1).id);
+  state = act(state, { type: 'supplier_settle', payableId, accountId: 'acc-corp-1', amount: 549999, date: '2026-11-01' });
+  assert.equal(summary(state).supplierPayables, 0);
+  assert.equal(summary(state, '2026-10').profit, summary(before, '2026-10').profit);
+  assert.equal(summary(state, '2026-11').profit, 0);
+  assert.throws(() => act(state, { type: 'supplier_settle', payableId, accountId: 'acc-corp-1', amount: 1, date: '2026-11-01' }), /超过剩余应付/);
+});
+
+test('明确抵扣预付款只减少指定应付和同一供应商预付款，不产生银行流水', () => {
+  let state = creditPurchase();
+  const original = structuredClone(state), payableId = state.payables[0].id;
+  state = act(state, { type: 'supplier_offset', payableId, amount: 325000 });
+  assert.equal(state.payables[0].offset, 325000);
+  assert.equal(state.payables[0].paid, 0);
+  assert.equal(summary(state).supplierPayables, 325000);
+  assert.equal(state.suppliers[0].available, original.suppliers[0].available - 325000);
+  assert.equal(state.suppliers[1].available, original.suppliers[1].available);
+  assert.equal(summary(state).totalCash, summary(original).totalCash);
+  assert.deepEqual(state.ledger, original.ledger);
+  assert.deepEqual(state.inventory, original.inventory);
+  assert.equal(summary(state).profit, summary(original).profit);
+  assert.equal(state.lastAction.payableId, payableId);
+  assert.equal(state.lastAction.supplierId, 'sup-1');
+  state = act(state, { type: 'supplier_settle', payableId, accountId: 'acc-corp-1', amount: 325000 });
+  assert.equal(summary(state).supplierPayables, 0);
+  assert.equal(state.payables[0].paid + state.payables[0].offset, state.payables[0].amount);
+});
+
+test('应付超额、余额不足和错误日期原子拒绝，不改原账', () => {
+  const state = creditPurchase(), original = structuredClone(state), payableId = state.payables[0].id;
+  for (const action of [
+    { type: 'supplier_offset', payableId, amount: 650001 },
+    { type: 'supplier_settle', payableId, accountId: 'acc-corp-1', amount: 650001 },
+    { type: 'supplier_settle', payableId, accountId: 'missing', amount: 1 },
+    { type: 'supplier_settle', payableId, accountId: 'acc-corp-1', amount: 1, date: '2026-10-14' },
+    { type: 'supplier_offset', payableId, amount: 1, date: '2026-10-14' },
+    { type: 'supplier_offset', payableId: 'missing', amount: 1 },
+  ]) assert.throws(() => act(state, action));
+  const lowPrepay = structuredClone(state); lowPrepay.suppliers[0].available = 1;
+  assert.throws(() => act(lowPrepay, { type: 'supplier_offset', payableId, amount: 2 }), /预付款不足/);
+  const lowCash = structuredClone(state); lowCash.accounts[0].balance = 1;
+  assert.throws(() => act(lowCash, { type: 'supplier_settle', payableId, accountId: 'acc-corp-1', amount: 2 }), /余额不足/);
+  assert.deepEqual(state, original);
+});
+
+test('供应商抵扣不能倒用未来预付款，也不能倒填已结算应付', () => {
+  let state = creditPurchase();
+  const payableId = state.payables[0].id;
+  state = act(state, { type: 'supplier_pay', supplierId: 'sup-1', accountId: 'acc-corp-1', amount: 100, date: '2026-10-20' });
+  assert.throws(() => act(state, { type: 'supplier_offset', payableId, amount: 10, date: '2026-10-19' }), /更晚的预付/);
+  state = act(state, { type: 'supplier_offset', payableId, amount: 10, date: '2026-10-20' });
+  assert.throws(() => act(state, { type: 'supplier_settle', payableId, accountId: 'acc-corp-1', amount: 10, date: '2026-10-19' }), /更晚的付款或抵扣/);
+});
+
+test('旧账没有应付集合、旧采购没有结算方式时仍按预付处理', () => {
+  let state = fixture(); delete state.payables;
+  assert.equal(summary(state).supplierPayables, 0);
+  state = act(state, { type: 'purchase_lock', id: 'legacy', supplierId: 'sup-1', productId: 'prod-1', qty: 1, unitPrice: 325000 });
+  assert.equal(state.suppliers[0].available, 675000);
+  delete state.purchases[0].settlementMode;
+  state = act(state, { type: 'purchase_ship', purchaseId: 'legacy' });
+  state = act(state, { type: 'purchase_receive', purchaseId: 'legacy', freight: 1, sns: ['LEGACY-SN'] });
+  assert.deepEqual(state.payables, []);
+  assert.equal(summary(state).supplierPayables, 0);
+  assert.equal(state.inventory[0].cost, 325001);
 });
 
 test('月度税费覆盖而非累计，不动现金，月份互不影响', () => {

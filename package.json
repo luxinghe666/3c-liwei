@@ -1,16 +1,19 @@
 {
   "name": "3c-finance-workspace",
-  "version": "0.3.0",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
   "description": "原拓财务：3C 供应链账本与 iPhone 客户端开发版",
   "scripts": {
     "start": "node server/start.mjs",
-    "test": "node --test model.test.mjs regression.test.mjs server.test.mjs",
-    "check": "node --check dist/app.js && node --check server/app.mjs && node --check dist/login.js && node --check server/init.mjs && node --check server/health.mjs && node --check scripts/make-ios-project.mjs",
+    "test": "node --test model.test.mjs regression.test.mjs operations.test.mjs accounts.test.mjs daily-profit.test.mjs proxy.test.mjs quantity.test.mjs notifications.test.mjs server.test.mjs",
+    "test:offline": "node --test model.test.mjs regression.test.mjs operations.test.mjs accounts.test.mjs daily-profit.test.mjs proxy.test.mjs quantity.test.mjs notifications.test.mjs",
+    "check": "node --check dist/app.js && node --check server/app.mjs && node --check server/client-ip.mjs && node --check server/start.mjs && node --check dist/login.js && node --check server/init.mjs && node --check server/health.mjs && node --check scripts/make-ios-project.mjs && node --check dist/workflows.js && node --check dist/insights.js && node --check server/corrections.mjs && node --check server/operations.mjs && node --check dist/stock.js && node --check server/notifications.mjs && node --check server/push.mjs && node --check dist/feedback.js && node --check dist/appearance.js",
     "test:swift": "sh scripts/test-swift-core.sh",
     "ios:project": "node scripts/make-ios-project.mjs",
     "ios:archive": "sh scripts/archive-ios.sh"
   },
-  "engines": {"node": ">=24.13.0"}
+  "engines": {
+    "node": ">=24.13.0"
+  }
 }

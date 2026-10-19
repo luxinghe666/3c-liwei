@@ -2,6 +2,9 @@
 node_modules/
 .env
 .env.*
+*.p8
+*.p12
+*.mobileprovision
 !.env.example
 .openai/
 work/
