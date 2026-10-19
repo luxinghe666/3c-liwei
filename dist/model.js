@@ -1,4 +1,6 @@
 /** Shared business rules. All money is stored as integer cents; createInitialState is demo-only. */
+import {addDays} from './insights.js';
+import {splitCents} from './stock.js';
 export const money = cents => new Intl.NumberFormat('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format((Number(cents) || 0) / 100);
 
 const fail = message => { throw new Error(message); };
@@ -18,6 +20,20 @@ const validMonth = month => {
   return month;
 };
 const nextId = (state, prefix) => `${prefix}-${++state.sequence}`;
+// Supplier balances are cumulative. Refuse backdated uses of money that only
+// became available later; a historical replay workflow is deliberately separate.
+const checkSupplierBalanceDate = (state, supplierId, date) => {
+  const laterBalanceChange = state.audit.some(row => {
+    if (row.date <= date) return false;
+    const payload = row.payload || {};
+    if (row.type === 'supplier_pay') return (row.supplierId || payload.supplierId) === supplierId;
+    if (['purchase_lock', 'purchase_intake'].includes(row.type)) return payload.supplierId === supplierId && (payload.settlementMode || 'prepaid') === 'prepaid';
+    if (row.type === 'supplier_offset') return (row.supplierId || state.payables.find(item => item.id === payload.payableId)?.supplierId) === supplierId;
+    return false;
+  });
+  if (laterBalanceChange) fail('该供应商已有更晚的预付或抵扣记录；请按日期顺序录入');
+};
+export const payableOutstanding = payable => payable.amount - payable.paid - payable.offset;
 const checkCustomerSettlementDate = (state, customerId, date) => {
   const sales = state.sales.filter(sale => sale.customerId === customerId);
   const saleIds = new Set(sales.map(sale => sale.id));
@@ -28,9 +44,11 @@ const checkCustomerSettlementDate = (state, customerId, date) => {
 };
 const moveCash = (state, accountId, amount, event, type, note = event.note) => {
   const account = find(state.accounts, accountId, '账户');
+  if (account.openingDate && event.date < account.openingDate) fail('业务日期不能早于账户启用日期');
   if (account.balance + amount < 0) fail(`${account.name}余额不足`);
   account.balance += amount;
-  state.ledger.push({ id: nextId(state, 'txn'), date: event.date, type, accountId, amount, note: note || '', actionId: event.id });
+  const links = Object.fromEntries(['supplierId', 'purchaseId', 'payableId'].filter(key => event[key]).map(key => [key, event[key]]));
+  state.ledger.push({ id: nextId(state, 'txn'), date: event.date, type, accountId, amount, note: note || '', actionId: event.id, ...links });
 };
 export const proportionalProfit = (margin, paid, total) => {
   // Avoid floating-point multiplication for large amounts; round ties toward +infinity, like Math.round.
@@ -53,9 +71,50 @@ const recognize = (state, sale, amount, event) => {
   state.recognitions.push({ id: nextId(state, 'rec'), date: event.date, saleId: sale.id, amount, profit, note: event.note || '销售回款确认毛利', actionId: event.id });
 };
 
+const receivePurchase = (state, purchase, action, event) => {
+  const date = event.date;
+      integer(action.freight, '到货运费', 0);
+      const quantityMode=action.sns===undefined;
+      if(quantityMode)checkInventoryDate(state,purchase.productId,date);
+      else if (!Array.isArray(action.sns) || action.sns.length !== purchase.qty) fail(`请输入 ${purchase.qty} 个唯一 SN，每台一条`);
+      const sns = quantityMode ? Array(purchase.qty).fill('') : action.sns.map(sn => String(sn).trim());
+      if (!quantityMode&&(sns.some(sn => !sn) || new Set(sns.map(sn => sn.toUpperCase())).size !== sns.length)) fail('SN 不能为空或重复');
+      if (!quantityMode&&state.inventory.some(item => sns.some(sn => sn.toUpperCase() === (item.sn||'').toUpperCase()))) fail('SN 已在库存台账中，请检查重复录入');
+      const freightPerUnit = Math.floor(action.freight / purchase.qty);
+      const remainder = action.freight % purchase.qty;
+      sns.forEach((sn, index) => state.inventory.push({ id: nextId(state, 'stock'), date, lastStockInDate: date, sn, productId: purchase.productId, cost: purchase.unitPrice + freightPerUnit + (index < remainder ? 1 : 0), status: 'in_stock', purchaseId: purchase.id, note: event.note || '采购到货入库', actionId: event.id }));
+      purchase.status = 'received';
+      purchase.receivedDate = date;
+      purchase.freight = action.freight;
+      if(quantityMode)averageInventory(state,purchase.productId);
+      Object.assign(event, { supplierId: purchase.supplierId, purchaseId: purchase.id });
+      if (purchase.settlementMode === 'credit') {
+        const amount = purchase.qty * purchase.unitPrice;
+        if (!Number.isSafeInteger(amount)) fail('采购金额过大');
+        const payableId = nextId(state, 'payable');
+        state.payables.push({ id: payableId, supplierId: purchase.supplierId, purchaseId: purchase.id, recognizedDate: date, amount, paid: 0, offset: 0, note: event.note || purchase.note || '', actionId: event.id });
+        event.payableId = payableId;
+      }
+};
+
+// Keep every cent in the pool; unit cost slots differ by at most one cent.
+export function averageInventory(state,productId) {
+  const rows=state.inventory.filter(i=>i.productId===productId&&i.status==='in_stock');
+  const total=rows.reduce((n,i)=>n+i.cost,0);
+  if(!Number.isSafeInteger(total))fail('同型号库存总成本超过安全范围');
+  rows.forEach((row,i)=>{row.acquisitionCost??=row.cost;row.cost=splitCents(total,rows.length,i);});
+}
+function checkInventoryDate(state,productId,date) {
+  const later=state.inventory.some(i=>i.productId===productId&&(i.lastStockInDate||i.date||'')>date)
+    ||state.sales.some(s=>s.productId===productId&&(s.date>date||(s.returnedDate||'')>date));
+  if(later)fail('该型号已有更晚的库存业务；移动加权平均成本请按日期顺序录入');
+}
+
 export function applyAction(input, action) {
   if (!action || typeof action.type !== 'string') fail('请选择有效操作');
   const state = clone(input);
+  // Existing JSON books predate supplier payables; no database migration needed.
+  state.payables ??= [];
   const date = validDate(action.date || (action.type === 'tax' ? `${validMonth(action.month)}-15` : state.today));
   const event = { id: nextId(state, 'action'), date, note: String(action.note || ''), type: action.type };
   let resultId;
@@ -97,8 +156,30 @@ export function applyAction(input, action) {
     case 'supplier_pay': {
       integer(action.amount, '预付金额');
       const supplier = find(state.suppliers, action.supplierId, '供应商');
+      checkSupplierBalanceDate(state, supplier.id, date);
+      event.supplierId = supplier.id;
       moveCash(state, action.accountId, -action.amount, event, 'supplier_pay', event.note || `向${supplier.name}预付货款`);
       supplier.available += action.amount;
+      break;
+    }
+    case 'supplier_settle':
+    case 'supplier_offset': {
+      const amount = integer(action.amount, action.type === 'supplier_settle' ? '付款金额' : '抵扣金额');
+      const payable = find(state.payables, action.payableId, '应付货款');
+      const supplier = find(state.suppliers, payable.supplierId, '供应商');
+      if (date < payable.recognizedDate) fail('付款或抵扣日期不能早于实际收货日期');
+      if (state.audit.some(row => ['supplier_settle', 'supplier_offset'].includes(row.type) && (row.payableId || row.payload?.payableId) === payable.id && row.date > date)) fail('该应付已有更晚的付款或抵扣记录；请按日期顺序录入');
+      if (amount > payableOutstanding(payable)) fail('金额不能超过剩余应付货款');
+      Object.assign(event, { supplierId: supplier.id, purchaseId: payable.purchaseId, payableId: payable.id });
+      if (action.type === 'supplier_settle') {
+        moveCash(state, action.accountId, -amount, event, 'supplier_settle', event.note || `支付${supplier.name}应付货款`);
+        payable.paid += amount;
+      } else {
+        checkSupplierBalanceDate(state, supplier.id, date);
+        if (amount > supplier.available) fail('供应商可用预付款不足');
+        supplier.available -= amount;
+        payable.offset += amount;
+      }
       break;
     }
     case 'boss_pay':
@@ -132,6 +213,31 @@ export function applyAction(input, action) {
       state.adjustments.push({ id: nextId(state, 'adjustment'), date, saleId: sale.id, amount: action.amount, kind: 'freight', note: event.note || '补录运费，仅计入本月', actionId: event.id });
       break;
     }
+    case 'purchase_intake': {
+      integer(action.qty, '采购数量');
+      if (action.qty > 1000) fail('单次入库数量不能超过 1000');
+      integer(action.unitPrice, '采购单价');
+      const supplier = find(state.suppliers, action.supplierId, '供应商');
+      find(state.products, action.productId, '产品');
+      const amount = action.qty * action.unitPrice;
+      if (!Number.isSafeInteger(amount)) fail('采购金额过大');
+      const settlementMode = action.settlementMode || 'credit';
+      if (!['prepaid', 'credit'].includes(settlementMode)) fail('请选择预付款扣除或记应付');
+      if (action.shippedDate && validDate(action.shippedDate) > date) fail('到货日期不能早于发货日期');
+      if (settlementMode === 'prepaid') {
+        checkSupplierBalanceDate(state, supplier.id, date);
+        if (amount > supplier.available) fail('供应商可用预付款不足');
+        supplier.available -= amount;
+      }
+      resultId = nextId(state, 'purchase');
+      const purchase = { id: resultId, date, supplierId: supplier.id, productId: action.productId,
+        qty: action.qty, unitPrice: action.unitPrice, settlementMode, status: 'received',
+        lockedDate: null, shippedDate: action.shippedDate || null, receivedDate: date,
+        freight: 0, note: event.note, actionId: event.id, intakeDirect: true };
+      state.purchases.push(purchase);
+      receivePurchase(state, purchase, action, event);
+      break;
+    }
     case 'purchase_lock': {
       integer(action.qty, '采购数量');
       integer(action.unitPrice, '采购单价');
@@ -139,11 +245,18 @@ export function applyAction(input, action) {
       find(state.products, action.productId, '产品');
       const amount = action.qty * action.unitPrice;
       if (!Number.isSafeInteger(amount)) fail('采购金额过大');
-      if (amount > supplier.available) fail('供应商可用预付款不足');
-      supplier.available -= amount;
+      const settlementMode = action.settlementMode === undefined ? 'prepaid' : action.settlementMode;
+      if (!['prepaid', 'credit'].includes(settlementMode)) fail('请选择预付锁货或收货记应付');
+      if (settlementMode === 'prepaid') {
+        checkSupplierBalanceDate(state, supplier.id, date);
+        if (amount > supplier.available) fail('供应商可用预付款不足');
+        supplier.available -= amount;
+      }
+      event.supplierId = supplier.id;
       resultId = action.id || nextId(state, 'purchase');
       if (state.purchases.some(purchase => purchase.id === resultId)) fail('采购单编号重复');
-      state.purchases.push({ id: resultId, date, supplierId: supplier.id, productId: action.productId, qty: action.qty, unitPrice: action.unitPrice, status: 'locked', lockedDate: date, shippedDate: null, receivedDate: null, freight: 0, note: event.note || '', actionId: event.id });
+      event.purchaseId = resultId;
+      state.purchases.push({ id: resultId, date, supplierId: supplier.id, productId: action.productId, qty: action.qty, unitPrice: action.unitPrice, settlementMode, status: 'locked', lockedDate: date, shippedDate: null, receivedDate: null, freight: 0, note: event.note || '', actionId: event.id });
       break;
     }
     case 'purchase_ship': {
@@ -158,17 +271,7 @@ export function applyAction(input, action) {
       const purchase = find(state.purchases, action.purchaseId, '采购单');
       if (purchase.status !== 'shipped') fail('只有在途采购单可以确认到货，不能重复入库');
       if (date < purchase.shippedDate) fail('到货日期不能早于发货日期');
-      integer(action.freight, '到货运费', 0);
-      if (!Array.isArray(action.sns) || action.sns.length !== purchase.qty) fail(`请输入 ${purchase.qty} 个唯一 SN，每台一条`);
-      const sns = action.sns.map(sn => String(sn).trim());
-      if (sns.some(sn => !sn) || new Set(sns.map(sn => sn.toUpperCase())).size !== sns.length) fail('SN 不能为空或重复');
-      if (state.inventory.some(item => sns.some(sn => sn.toUpperCase() === item.sn.toUpperCase()))) fail('SN 已在库存台账中，请检查重复录入');
-      const freightPerUnit = Math.floor(action.freight / purchase.qty);
-      const remainder = action.freight % purchase.qty;
-      sns.forEach((sn, index) => state.inventory.push({ id: nextId(state, 'stock'), date, lastStockInDate: date, sn, productId: purchase.productId, cost: purchase.unitPrice + freightPerUnit + (index < remainder ? 1 : 0), status: 'in_stock', purchaseId: purchase.id, note: event.note || '采购到货入库', actionId: event.id }));
-      purchase.status = 'received';
-      purchase.receivedDate = date;
-      purchase.freight = action.freight;
+      receivePurchase(state, purchase, action, event);
       break;
     }
     case 'sale_create': {
@@ -176,24 +279,47 @@ export function applyAction(input, action) {
       integer(action.freight ?? 0, '销售运费', 0);
       const customer = find(state.customers, action.customerId, '客户');
       checkCustomerSettlementDate(state, customer.id, date);
-      const stock = find(state.inventory, action.inventoryId, '库存');
-      if (stock.status !== 'in_stock') fail('此 SN 已售出，不能重复销售');
-      const stockInDate = stock.lastStockInDate || stock.date;
-      if (stockInDate && date < stockInDate) fail('销售日期不能早于最近入库或退货回仓日期');
-      const credit = Math.min(Math.max(0, -customer.balance), action.amount);
-      resultId = action.id || nextId(state, 'sale');
-      if (state.sales.some(sale => sale.id === resultId)) fail('销售单编号重复');
-      const sale = { id: resultId, date, customerId: customer.id, productId: stock.productId, sn: stock.sn, inventoryId: stock.id, amount: action.amount, cost: stock.cost, freight: action.freight || 0, originalFreight: action.freight || 0, paid: 0, returned: false, recognizedProfit: 0, note: event.note || '', actionId: event.id };
-      state.sales.push(sale);
-      stock.status = 'sold';
-      customer.balance += action.amount;
-      recognize(state, sale, credit, event);
-      event.creditUsed = credit;
+      const quantityMode=action.productId!==undefined;
+      let stocks;
+      if(quantityMode){
+        find(state.products,action.productId,'型号');integer(action.qty,'销售数量');
+        if(action.qty>1000||action.amount<action.qty)fail('销售数量最多 1000，每件销售金额至少一分');
+        checkInventoryDate(state,action.productId,date);
+        averageInventory(state,action.productId);
+        stocks=state.inventory.filter(i=>i.productId===action.productId&&i.status==='in_stock').slice(0,action.qty);
+        if(stocks.length!==action.qty)fail('该型号库存不足');
+        const pool=state.inventory.filter(i=>i.productId===action.productId&&i.status==='in_stock');
+        const value=pool.reduce((n,i)=>n+i.cost,0),cost=proportionalProfit(value,action.qty,pool.length);
+        stocks.forEach((s,i)=>s.cost=splitCents(cost,stocks.length,i));
+        pool.slice(action.qty).forEach((s,i)=>s.cost=splitCents(value-cost,pool.length-action.qty,i));
+      }else stocks=[find(state.inventory,action.inventoryId,'库存')];
+      event.creditUsed=0;
+      for(const [index,stock] of stocks.entries()){
+        if(stock.status!=='in_stock')fail('商品已售出，不能重复销售');
+        const stockInDate=stock.lastStockInDate||stock.date;
+        if(stockInDate&&date<stockInDate)fail('销售日期不能早于最近入库或退货回仓日期');
+        const amount=splitCents(action.amount,stocks.length,index),freight=splitCents(action.freight||0,stocks.length,index);
+        const credit=Math.min(Math.max(0,-customer.balance),amount);
+        const saleId=(!quantityMode&&action.id)||nextId(state,'sale');
+        if(state.sales.some(s=>s.id===saleId))fail('销售单编号重复');
+        resultId??=saleId;
+        const sale={id:saleId,...(quantityMode?{groupId:resultId}:{}),date,customerId:customer.id,productId:stock.productId,sn:quantityMode?'':stock.sn,inventoryId:stock.id,amount,cost:stock.cost,freight,originalFreight:freight,paid:0,returned:false,recognizedProfit:0,termDays:customer.termDays??3,dueDate:addDays(date,customer.termDays??3),note:event.note||'',actionId:event.id};
+        state.sales.push(sale);stock.status='sold';customer.balance+=amount;
+        recognize(state,sale,credit,event);event.creditUsed+=credit;
+      }
       break;
     }
     case 'sale_return': {
-      const sale = find(state.sales, action.saleId, '销售单');
-      if (sale.returned) fail('此销售单已退货，不能重复退货');
+      const original = find(state.sales, action.saleId, '销售单');
+      const quantityMode=action.qty!==undefined;
+      if(!quantityMode&&original.returned)fail('此销售单已退货，不能重复退货');
+      const available=quantityMode&&original.groupId?state.sales.filter(s=>s.groupId===original.groupId&&!s.returned):[original].filter(s=>!s.returned);
+      const qty=action.qty??1;integer(qty,'退货数量');
+      if(qty>available.length)fail('退货数量超过本单可退数量');
+      const returning=available.slice(0,qty);
+      if(quantityMode)checkInventoryDate(state,original.productId,date);
+      let reusable=0;
+      for(const sale of returning){
       if (date < sale.date || state.recognitions.some(rec => rec.saleId === sale.id && rec.date > date)) fail('退货日期不能早于销售或收款日期');
       checkCustomerSettlementDate(state, sale.customerId, date);
       if (state.sales.some(item => item.customerId === sale.customerId && item.date > date)) fail('该客户已录入更晚的销售；历史退货需要重算，请按日期顺序录入演示账');
@@ -202,6 +328,7 @@ export function applyAction(input, action) {
       const customer = find(state.customers, sale.customerId, '客户');
       customer.balance -= sale.amount;
       stock.status = 'in_stock';
+      stock.cost = sale.cost;
       stock.lastStockInDate = date;
       sale.returned = true;
       sale.returnedDate = date;
@@ -209,8 +336,10 @@ export function applyAction(input, action) {
       state.adjustments.push({ id: nextId(state, 'adjustment'), date, saleId: sale.id, amount: sale.recognizedProfit, kind: 'return_reversal', note: event.note || '整单退货冲回已确认利润', actionId: event.id });
       if (sale.originalFreight) state.adjustments.push({ id: nextId(state, 'adjustment'), date, saleId: sale.id, amount: sale.originalFreight, kind: 'return_freight', note: '退货保留已发生的原始运费损失', actionId: event.id });
       // A returned payment can also settle other open sales for this customer.
-      const remainingSales = state.sales.filter(item => item.customerId === customer.id && !item.returned && item.date <= date && item.paid < item.amount).sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id, 'en', { numeric: true }));
-      let reusable = sale.paid;
+      reusable+=sale.paid;
+      }
+      if(quantityMode)averageInventory(state,original.productId);
+      const remainingSales = state.sales.filter(item => item.customerId === original.customerId && !item.returned && item.date <= date && item.paid < item.amount).sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id, 'en', { numeric: true }));
       for (const item of remainingSales) {
         const allocated = Math.min(reusable, item.amount - item.paid);
         recognize(state, item, allocated, event);
@@ -232,12 +361,33 @@ export function applyAction(input, action) {
 
 export function summary(state, month = '2026-10') {
   validMonth(month);
-  const inMonth = row => row.date.startsWith(month);
+  return periodSummary(state, month, state.taxes[month] || 0);
+}
+
+// Allocate integer cents across the actual days in the selected month.
+// Only an unfilled current month may use last month's tax as an estimate.
+export function dailySummary(state, day, asOf = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())) {
+  validDate(day);
+  validDate(asOf);
+  const month = day.slice(0,7), [year, monthNumber] = month.split('-').map(Number);
+  const monthEnd = new Date(`${month}-01T00:00:00Z`);
+  monthEnd.setUTCMonth(monthEnd.getUTCMonth() + 1, 0);
+  const daysInMonth = monthEnd.getUTCDate();
+  const previousMonth = `${String(monthNumber === 1 ? year - 1 : year).padStart(4,'0')}-${String(monthNumber === 1 ? 12 : monthNumber - 1).padStart(2,'0')}`;
+  let taxSourceMonth = null, taxEstimated = false;
+  if (Object.hasOwn(state.taxes, month)) taxSourceMonth = month;
+  else if (month === asOf.slice(0,7) && Object.hasOwn(state.taxes, previousMonth)) { taxSourceMonth = previousMonth; taxEstimated = true; }
+  const monthlyTax = taxSourceMonth ? state.taxes[taxSourceMonth] : 0;
+  const allocatedTax = Math.floor(monthlyTax / daysInMonth) + (Number(day.slice(-2)) <= monthlyTax % daysInMonth ? 1 : 0);
+  return { ...periodSummary(state, day, allocatedTax), taxEstimated, taxMissing: taxSourceMonth === null, taxSourceMonth, monthlyTax, daysInMonth };
+}
+
+function periodSummary(state, period, tax) {
+  const inMonth = row => row.date.startsWith(period);
   const sum = (rows, key) => rows.reduce((total, row) => total + row[key], 0);
   const salesProfit = sum(state.recognitions.filter(inMonth), 'profit');
   const returnReversal = sum(state.adjustments.filter(row => inMonth(row) && row.kind === 'return_reversal'), 'amount');
   const expenses = sum(state.expenses.filter(inMonth), 'amount');
-  const tax = state.taxes[month] || 0;
   const adjustments = sum(state.adjustments.filter(row => inMonth(row) && row.kind !== 'return_reversal'), 'amount');
   const stock = state.inventory.filter(item => item.status === 'in_stock');
   return {
@@ -245,6 +395,7 @@ export function summary(state, month = '2026-10') {
     receivables: sum(state.customers.filter(customer => customer.balance > 0), 'balance'),
     customerCredit: -sum(state.customers.filter(customer => customer.balance < 0), 'balance'),
     supplierAvailable: sum(state.suppliers, 'available'),
+    supplierPayables: (state.payables || []).reduce((total, payable) => total + payableOutstanding(payable), 0),
     bossOwed: state.bossOwed,
     salesProfit, returnReversal, expenses, tax, adjustments,
     profit: salesProfit - returnReversal - expenses - tax - adjustments,
@@ -281,7 +432,7 @@ export function createInitialState() {
       { id: 'prod-2', name: '办公主机 Mini S', category: '台式机' },
       { id: 'prod-3', name: '便携平板 Air 11', category: '平板' },
     ],
-    inventory: [], sales: [], purchases: [], ledger: [], recognitions: [], expenses: [], taxes: {}, adjustments: [], bossOwed: 0, audit: [], lastAction: null,
+    inventory: [], sales: [], purchases: [], payables: [], ledger: [], recognitions: [], expenses: [], taxes: {}, adjustments: [], bossOwed: 0, audit: [], lastAction: null,
   };
   state.accounts.forEach(account => state.ledger.push({ id: nextId(state, 'opening'), date: '2026-09-01', type: 'opening', accountId: account.id, amount: account.balance, note: '模拟期初账户余额', actionId: null }));
   const seedSales = [

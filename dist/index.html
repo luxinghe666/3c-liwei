@@ -9,6 +9,10 @@
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./app.css"><link rel="stylesheet" href="./auth.css">
+  <link rel="stylesheet" href="./workflows.css">
+  <link rel="stylesheet" href="./theme.css">
+  <link rel="stylesheet" href="./galaxy.css">
+  <script src="./appearance.js"></script>
 </head>
 <body>
   <div class="app-shell">
@@ -19,8 +23,8 @@
       <div class="sidebar-bottom"><div class="sidebar-note"><span class="status-dot"></span>原型演示空间<small>模拟数据 · 当前浏览器保存</small></div><div class="sidebar-foot"><span class="avatar">财</span><div><strong id="roleName">财务视角</strong><small class="sync-status">连接账本中</small></div><button class="button ghost small" id="switchRole" title="切换演示视角" aria-label="切换演示视角">⇄</button></div></div>
     </aside>
     <div class="workspace">
-      <header class="topbar"><div class="row"><button class="mobile-menu button ghost" id="menuButton" aria-label="打开导航">☰</button><div class="breadcrumb">工作空间 <span>/</span> <strong id="crumb">经营概览</strong></div></div><div class="topbar-actions"><span class="demo-badge">交互原型 · 演示数据</span><label class="month-picker"><span>期间</span><input id="monthPicker" type="month" value="2026-10" aria-label="报表月份"></label><button class="button ghost small" id="helpButton" aria-label="原型说明">?</button></div></header>
-      <main id="main" tabindex="-1"></main>
+      <header class="topbar"><div class="row"><button class="mobile-menu button ghost" id="menuButton" aria-label="打开导航">☰</button><div class="breadcrumb">工作空间 <span>/</span> <strong id="crumb">经营概览</strong></div></div><div class="topbar-actions"><label class="appearance-picker"><span class="sr-only">网页外观</span><select data-appearance-control aria-label="网页外观"><option value="system">跟随系统</option><option value="light">浅色</option><option value="dark">深色</option></select></label><span class="demo-badge">交互原型 · 演示数据</span><label class="month-picker"><span>期间</span><input id="monthPicker" type="month" value="2026-10" aria-label="报表月份"></label><button class="button ghost small" id="helpButton" aria-label="原型说明">?</button></div></header>
+      <main id="main" tabindex="-1"><div class="galaxy-loading" role="status"><span class="galaxy-loader" aria-hidden="true"></span><div><strong>正在连接账本</strong><p>读取账户和经营数据，请稍候。</p></div></div></main>
       <footer class="app-footer">仅供确认页面与流程 · 未接入真实账本、银行或博远 ERP</footer>
     </div>
   </div>
