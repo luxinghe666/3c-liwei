@@ -1,0 +1,911 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#4659d6">
+  <meta name="description" content="3C 供应链财务软件交互原型。使用模拟数据，体验资金流水、采购入库、客户回款与利润核算。">
+  <title>财务工作台 · 3C 供应链</title>
+<style>
+/* 澄财 · 财务经营工作台 */
+:root {
+  color-scheme: light;
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --sidebar: #f9fafc;
+  --ink: #202b43;
+  --ink-soft: #394761;
+  --muted: #7a8497;
+  --line: #e8ebf1;
+  --line-strong: #dbe0eb;
+  --brand: #4659d6;
+  --brand-dark: #3748b9;
+  --brand-light: #edf0ff;
+  --green: #159474;
+  --green-light: #e9f7f1;
+  --red: #d35e63;
+  --red-light: #fff0f0;
+  --amber: #bd842b;
+  --amber-light: #fff6e7;
+  --radius: 12px;
+  --shadow: 0 3px 12px rgb(30 44 76 / 3%);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Helvetica Neue", sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; }
+button, input, select, textarea { font: inherit; }
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+button, a { touch-action: manipulation; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: .5; }
+a { color: var(--brand); text-decoration: none; }
+button, input, select, textarea, a { outline: none; }
+:focus-visible { outline: 3px solid #8f9df3; outline-offset: 3px; }
+svg { display: block; flex: 0 0 auto; }
+svg:not([width]) { width: 18px; height: 18px; }
+img { max-width: 100%; }
+h1, h2, h3, p { margin-top: 0; }
+h1, h2, h3 { font-weight: 650; }
+h1 { font-size: 28px; line-height: 1.35; letter-spacing: -.7px; margin-bottom: 8px; }
+h2 { font-size: 16px; line-height: 1.5; letter-spacing: -.15px; margin-bottom: 0; }
+h3 { font-size: 15px; margin-bottom: 6px; }
+p { margin-bottom: 14px; }
+small { font-size: 12px; }
+::selection { background: #dfe4ff; color: #2539a7; }
+
+.app-shell { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 230px; flex: 0 0 230px; position: fixed; z-index: 30; inset: 0 auto 0 0;
+  display: flex; flex-direction: column; background: var(--sidebar); border-right: 1px solid var(--line);
+  padding: 28px 16px 18px;
+}
+.brand { display: flex; align-items: center; gap: 10px; padding: 0 12px 29px; color: var(--ink); }
+.brand-mark { display: flex; align-items: center; justify-content: center; flex: 0 0 36px; width: 36px; height: 36px; background: var(--brand); color: #fff; border-radius: 10px; box-shadow: 0 4px 8px rgb(70 89 214 / 12%); font-size: 22px; font-weight: 700; }
+.brand-mark svg { width: 24px; height: 24px; }
+.brand-name { font-size: 19px; font-weight: 700; letter-spacing: .3px; line-height: 1.2; }
+.brand-sub { display: block; margin-top: 4px; color: #9199aa; font-size: 10px; font-weight: 500; letter-spacing: 1.7px; line-height: 1.2; text-transform: uppercase; }
+.nav-section { margin-bottom: 25px; }
+.nav-section > h3, .nav-section > .nav-label, .nav-label, .nav-section-title { margin: 0 13px 9px; font-size: 10px; color: #9aa2b2; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; }
+.nav-item { position: relative; display: flex; align-items: center; width: 100%; min-height: 42px; gap: 11px; padding: 10px 13px; margin: 3px 0; border: 0; border-radius: 7px; background: transparent; color: #687389; font-size: 14px; font-weight: 500; text-align: left; transition: background .16s ease, color .16s ease; white-space: nowrap; }
+.nav-item:hover { color: var(--ink); background: #eef1f6; }
+.nav-item.active { color: var(--brand); background: #e9edfc; font-weight: 650; }
+.nav-item.active::before { content: ""; position: absolute; left: -16px; width: 3px; height: 20px; background: var(--brand); border-radius: 0 3px 3px 0; }
+.nav-item .icon { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; opacity: .9; }
+.nav-badge { margin-left: auto; min-width: 20px; height: 20px; padding: 1px 6px; border-radius: 5px; background: #e6e9f0; color: #7a8496; font-size: 11px; line-height: 18px; text-align: center; font-variant-numeric: tabular-nums; }
+.nav-item.active .nav-badge { background: #dce2ff; color: var(--brand); }
+.sidebar-foot { margin-top: auto; padding: 17px 9px 0; border-top: 1px solid var(--line); display: flex; gap: 10px; align-items: center; font-size: 12px; }
+.sidebar-foot strong { display: block; font-size: 12px; font-weight: 600; }
+.sidebar-foot small { display: block; margin-top: 2px; color: var(--muted); font-size: 10px; }
+.avatar { display: inline-flex; width: 34px; height: 34px; flex: 0 0 34px; align-items: center; justify-content: center; border: 1px solid #dde3f4; border-radius: 50%; color: var(--brand); background: #eaf0fc; font-size: 12px; font-weight: 650; }
+.workspace { flex: 1; min-width: 0; margin-left: 230px; }
+.topbar { min-height: 65px; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 32px; border-bottom: 1px solid var(--line); background: rgb(255 255 255 / 94%); }
+.breadcrumb { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; min-width: 0; }
+.breadcrumb strong, .breadcrumb .current { color: var(--ink-soft); font-weight: 500; }
+.breadcrumb svg { width: 13px; height: 13px; color: #aeb6c5; }
+.topbar-actions { display: flex; align-items: center; gap: 15px; }
+.topbar-actions .button { min-height: 30px; }
+.topbar-actions > .icon-button { color: #7f8a9e; }
+.demo-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid #e6e9f1; border-radius: 5px; color: #8a94a7; background: #fafbfc; font-size: 10px; font-weight: 500; letter-spacing: .4px; white-space: nowrap; }
+.demo-badge::before { content: ""; width: 5px; height: 5px; background: #94a1b8; border-radius: 50%; }
+.mobile-menu { display: none; }
+main#main { max-width: 1680px; margin: 0 auto; padding: 31px 32px 44px; }
+.page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 25px; }
+.eyebrow { font-size: 10px; font-weight: 650; color: var(--brand); letter-spacing: 1.6px; text-transform: uppercase; margin-bottom: 8px; }
+.page-subtitle { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.75; }
+.page-actions { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; padding-bottom: 4px; }
+.button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 8px 13px; background: #fff; color: var(--ink-soft); border: 1px solid var(--line-strong); border-radius: 6px; font-size: 12px; font-weight: 550; line-height: 1.5; white-space: nowrap; box-shadow: 0 1px 2px rgb(32 43 67 / 2%); transition: color .16s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease; }
+.button svg { width: 15px; height: 15px; }
+.button:hover { background: #f9fafc; border-color: #bac4d8; }
+.button.primary { color: #fff; background: var(--brand); border-color: var(--brand); box-shadow: 0 2px 3px rgb(70 89 214 / 12%); }
+.button.primary:hover { background: var(--brand-dark); border-color: var(--brand-dark); }
+.button.secondary { background: #fff; border-color: var(--line-strong); }
+.button.ghost { background: transparent; box-shadow: none; border-color: transparent; color: var(--brand); }
+.button.ghost:hover { background: var(--brand-light); }
+.button.danger { color: var(--red); border-color: #f0c8cb; background: #fff; }
+.button.danger:hover { background: var(--red-light); }
+.button.small { min-height: 28px; padding: 4px 9px; font-size: 11px; border-radius: 5px; }
+.icon-button, .close-modal, .mobile-menu { align-items: center; justify-content: center; width: 32px; height: 32px; padding: 6px; border: 0; background: transparent; border-radius: 6px; color: var(--muted); }
+.icon-button, .close-modal { display: inline-flex; }
+.icon-button:hover, .close-modal:hover, .mobile-menu:hover { background: #f0f2f7; color: var(--ink); }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 15px; margin-bottom: 22px; }
+.kpi-card { position: relative; padding: 19px 20px 17px; min-height: 136px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.kpi-card.accent { border-color: #dde2f8; background: #f0f3ff; }
+.kpi-label { font-size: 12px; font-weight: 500; color: #758199; display: flex; align-items: center; gap: 6px; }
+.kpi-value { margin-top: 11px; margin-bottom: 8px; font-size: clamp(23px, 2.1vw, 32px); font-weight: 650; letter-spacing: -.6px; line-height: 1.3; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.kpi-value small, .kpi-value .currency { font-size: 16px; font-weight: 500; margin-right: 3px; color: #69758c; }
+.kpi-card.accent .kpi-value { color: #3a4dbb; }
+.kpi-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 10px; color: #8a94a5; }
+.kpi-icon { position: absolute; top: 16px; right: 16px; width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; background: #f5f7fb; color: #9ca7bb; }
+.kpi-icon svg { width: 15px; height: 15px; }
+.kpi-card.accent .kpi-icon { color: #7d8ce3; background: #e5eafd; }
+.dashboard-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 22px; align-items: start; margin-bottom: 22px; }
+.dashboard-grid > *, .two-column > *, .three-column > * { min-width: 0; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.panel + .panel { margin-top: 20px; }
+.dashboard-grid > .panel + .panel, .two-column > .panel + .panel, .three-column > .panel + .panel { margin-top: 0; }
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 19px 21px 15px; }
+.panel-head h2 { font-size: 14px; }
+.panel-subtitle { color: var(--muted); font-size: 11px; margin: 3px 0 0; }
+.panel-body { padding: 0 21px 20px; }
+.panel-body > :last-child { margin-bottom: 0; }
+.panel-head .link { font-size: 11px; }
+.panel-footer { padding: 13px 21px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; }
+.row { display: flex; align-items: center; gap: 12px; }
+.stack { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.stack > .panel + .panel { margin-top: 0; }
+.muted { color: var(--muted); }
+.positive { color: var(--green); }
+.negative { color: var(--red); }
+.mono { font-variant-numeric: tabular-nums; letter-spacing: .05px; }
+.right { text-align: right; }
+.link { color: var(--brand); font-size: inherit; background: transparent; border: 0; padding: 0; cursor: pointer; text-decoration: none; font-weight: 500; }
+.link:hover { color: #2f3fae; text-decoration: underline; text-underline-offset: 3px; }
+.pill { display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 3px 7px; border-radius: 4px; font-size: 10px; line-height: 1.5; white-space: nowrap; color: #79859b; background: #f0f3f7; font-weight: 500; }
+.pill.success { color: #258c71; background: #eaf7f1; }
+.pill.warning { color: #b7802d; background: #fff4e2; }
+.pill.neutral { color: #7b879b; background: #f0f2f6; }
+.pill.info { color: #6377c8; background: #eef1ff; }
+.pill.danger { color: #c46165; background: #fff0f1; }
+.account-list { display: flex; flex-direction: column; }
+.account-row { display: flex; align-items: center; gap: 10px; min-height: 65px; padding: 13px 0; border-bottom: 1px solid #f0f2f6; }
+.account-row:last-child { border-bottom: 0; padding-bottom: 4px; }
+.account-icon { display: flex; align-items: center; justify-content: center; flex: 0 0 34px; width: 34px; height: 34px; border: 1px solid #e9edf4; border-radius: 8px; color: #73819c; background: #f8fafd; }
+.account-icon svg { width: 17px; height: 17px; }
+.account-info { flex: 1; min-width: 0; font-size: 12px; font-weight: 500; }
+.account-info small { display: block; font-size: 10px; font-weight: 400; color: #95a0b3; margin-top: 2px; }
+.account-amount { color: var(--ink-soft); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+.account-tag { display: inline-block; margin-left: 5px; font-size: 9px; font-weight: 400; color: #9ba6b9; border: 1px solid #e9edf4; border-radius: 3px; padding: 0 4px; }
+.account-total { display: flex; align-items: baseline; justify-content: space-between; padding: 13px 0 0; margin-top: 12px; border-top: 1px solid var(--line); font-size: 11px; color: var(--muted); }
+.account-total strong { font-size: 18px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.chart-bars { position: relative; height: 184px; display: flex; align-items: flex-end; justify-content: space-around; gap: 18px; margin: 18px 0 26px; padding: 0 12px 0; border-bottom: 1px solid #e8edf6; background: repeating-linear-gradient(to top, transparent 0, transparent 44px, #f0f3f8 44px, #f0f3f8 45px); }
+.chart-group { display: flex; align-items: flex-end; justify-content: center; gap: 7px; position: relative; flex: 1; height: 100%; }
+.chart-bar { position: relative; width: min(25px, 38%); height: var(--height, 50%); border-radius: 4px 4px 0 0; background: #7b8bea; transition: opacity .15s ease; min-height: 2px; }
+.chart-bar.income { background: #7182e5; }
+.chart-bar.outflow { background: #dfe5f8; }
+.chart-bar:hover { opacity: .75; }
+.chart-label { position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%); color: #9aa4b5; font-size: 10px; white-space: nowrap; }
+.legend { display: flex; flex-wrap: wrap; align-items: center; gap: 15px; color: #8b95a7; font-size: 10px; }
+.legend > span { display: inline-flex; gap: 6px; align-items: center; }
+.legend-dot { display: inline-block; width: 7px; height: 7px; flex: 0 0 7px; border-radius: 2px; background: #7182e5; }
+.legend-dot.income { background: #7182e5; }
+.legend-dot.outflow { background: #dfe5f8; }
+.progress-track { width: 100%; height: 5px; background: #eef1f7; border-radius: 6px; overflow: hidden; }
+.progress-fill { height: 100%; width: var(--progress, 0); border-radius: inherit; background: #7a8ce5; }
+
+.table-wrap { width: 100%; overflow: auto; scrollbar-width: thin; scrollbar-color: #d6dce8 transparent; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; text-align: left; }
+thead { background: #fafbfe; }
+th { padding: 11px 19px; border-top: 1px solid #f0f2f7; border-bottom: 1px solid #edf0f5; color: #909aab; font-weight: 450; white-space: nowrap; font-size: 12px; }
+td { padding: 15px 19px; border-bottom: 1px solid #eef1f6; color: #4e5b72; font-size: 14px; vertical-align: middle; }
+tr:last-child td { border-bottom: 0; }
+tbody tr { transition: background .12s ease; }
+tbody tr:hover { background: #fbfcff; }
+td strong { font-weight: 550; color: var(--ink-soft); }
+td small, td .cell-subtitle { display: block; margin-top: 3px; font-size: 10px; color: #9ba4b5; }
+td.right, th.right, td.amount, th.amount { font-variant-numeric: tabular-nums; white-space: nowrap; }
+td .row { gap: 7px; }
+.table-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 15px 20px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.table-toolbar .row { flex-wrap: wrap; }
+.search-input { min-width: 190px; max-width: 100%; padding: 8px 11px; height: 35px; border: 1px solid var(--line); background: #fff; border-radius: 6px; color: var(--ink); font-size: 11px; }
+.search-input::placeholder { color: #a4adbd; }
+.search-input:focus { border-color: #9aa8ed; box-shadow: 0 0 0 3px #f0f2ff; }
+.filter-tabs, .page-tabs { display: flex; align-items: center; gap: 4px; }
+.filter-tabs { flex-wrap: wrap; }
+.filter-tab { padding: 6px 10px; border: 0; border-radius: 5px; background: transparent; color: #8b96aa; font-size: 11px; white-space: nowrap; }
+.filter-tab:hover { background: #f5f6fa; color: var(--ink); }
+.filter-tab.active { color: var(--brand); background: #eef1fc; font-weight: 600; }
+.empty-state { padding: 48px 25px; text-align: center; color: #929db0; font-size: 13px; }
+.empty-state svg { margin: 0 auto 12px; color: #b7c0d2; width: 30px; height: 30px; }
+.summary-strip { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 28px; margin-bottom: 20px; padding: 17px 20px; background: #fff; border: 1px solid var(--line); border-radius: 10px; font-size: 12px; color: var(--muted); }
+.summary-strip strong { color: var(--ink); font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; margin-left: 8px; }
+.summary-strip .stat-inline { padding-right: 28px; border-right: 1px solid var(--line); }
+.summary-strip .stat-inline:last-child { padding-right: 0; border-right: 0; }
+.stat-inline { display: flex; align-items: baseline; gap: 9px; color: var(--muted); font-size: 12px; }
+.stat-inline strong { color: var(--ink); font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.two-column { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-bottom: 20px; }
+.three-column { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin-bottom: 20px; }
+.detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 25px; }
+.detail-item { font-size: 13px; color: var(--ink-soft); min-width: 0; overflow-wrap: anywhere; }
+.detail-item > label, .detail-item > .label, .detail-item > small, .detail-item > dt { display: block; margin-bottom: 5px; font-size: 11px; color: #919bad; }
+.detail-item > strong { font-weight: 550; }
+.flow-steps { display: flex; align-items: flex-start; margin: 20px 0 28px; gap: 0; }
+.flow-step { position: relative; flex: 1; color: #a2acbc; font-size: 11px; text-align: center; padding: 0 6px; }
+.flow-step::before { content: ""; display: block; position: relative; z-index: 1; width: 10px; height: 10px; margin: 0 auto 10px; background: #e4e8f0; border: 3px solid #f6f7fa; border-radius: 50%; box-sizing: content-box; }
+.flow-step::after { content: ""; position: absolute; top: 7px; height: 2px; width: 100%; left: 50%; background: #e9edf4; }
+.flow-step:last-child::after { display: none; }
+.flow-step.done { color: #6d8e83; }
+.flow-step.done::before { background: #63ad96; border-color: #e8f6f0; }
+.flow-step.done::after { background: #b4d9cd; }
+.flow-step.current { color: var(--brand); font-weight: 600; }
+.flow-step.current::before { background: var(--brand); border-color: #e3e7ff; }
+.notice { padding: 13px 15px; margin-bottom: 18px; border: 1px solid #e2e8fb; border-radius: 7px; color: #7282b4; background: #f6f8ff; font-size: 12px; line-height: 1.8; }
+.notice.warning { color: #aa843f; background: #fffbf2; border-color: #f5e9c9; }
+.notice strong { font-weight: 600; }
+.list-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 14px 0; border-bottom: 1px solid #eef1f6; font-size: 12px; }
+.list-row:last-child { border-bottom: 0; }
+.list-row small { display: block; color: var(--muted); font-size: 10px; margin-top: 4px; }
+.activity-list { display: flex; flex-direction: column; }
+.activity-list > li, .activity-list > .activity-row, .activity-list > .list-row { display: flex; align-items: flex-start; gap: 10px; padding: 11px 0; }
+.activity-list { list-style: none; padding: 0; margin: 0; }
+.activity-dot { flex: 0 0 7px; width: 7px; height: 7px; margin-top: 6px; background: #a3afe8; border-radius: 50%; box-shadow: 0 0 0 3px #f3f5fc; }
+.activity-content { flex: 1; font-size: 12px; color: #64718a; }
+.activity-content strong { color: var(--ink-soft); font-weight: 500; }
+.activity-content p { margin-bottom: 3px; }
+.activity-time { font-size: 10px; color: #9ba5b6; white-space: nowrap; }
+.formula-row, .formula-total, .split-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 0; color: #7f8a9e; font-size: 12px; }
+.formula-row > :last-child, .formula-total > :last-child { color: #526078; font-weight: 500; font-variant-numeric: tabular-nums; }
+.formula-total { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 16px; color: var(--ink); font-weight: 600; }
+.formula-total > :last-child { color: var(--brand); font-size: 21px; font-weight: 650; }
+.split-row { padding: 6px 0; }
+.split-row strong { font-weight: 600; color: var(--ink-soft); }
+.page-tabs { margin: -3px 0 23px; gap: 25px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+.page-tab { position: relative; padding: 12px 0; border: 0; background: transparent; font-size: 13px; color: #8994a8; white-space: nowrap; }
+.page-tab.active { color: var(--brand); font-weight: 600; }
+.page-tab.active::after { content: ""; position: absolute; height: 2px; background: var(--brand); inset: auto 0 0; border-radius: 2px 2px 0 0; }
+.page-tab:hover { color: var(--brand); }
+.card-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 17px; }
+.customer-card { padding: 20px; background: #fff; border: 1px solid var(--line); border-radius: 11px; box-shadow: var(--shadow); }
+.customer-card:hover { border-color: #cfd6ef; }
+.customer-card h3 { font-size: 14px; }
+.sn-code { display: inline-flex; background: #f4f6fa; border: 1px solid #e9edf3; color: #7c88a1; padding: 2px 6px; border-radius: 4px; font-size: 10px; letter-spacing: .6px; font-variant-numeric: tabular-nums; }
+.steps-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; margin-bottom: 20px; }
+.step-card { padding: 19px; border: 1px solid var(--line); background: #fff; border-radius: 10px; font-size: 12px; color: var(--muted); }
+.step-card h3 { color: var(--ink); font-size: 14px; }
+.step-card.active { border-color: #cbd3f8; background: #f8f9ff; }
+.step-card .step-number { display: inline-flex; width: 24px; height: 24px; align-items: center; justify-content: center; margin-bottom: 10px; border-radius: 7px; background: #edf0ff; color: var(--brand); font-size: 11px; }
+.drop-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 35px 20px; border: 1px dashed #cfd7e9; background: #fafbfe; border-radius: 9px; text-align: center; color: var(--muted); font-size: 12px; }
+.drop-zone svg { width: 28px; height: 28px; color: #8899ca; margin-bottom: 5px; }
+.drop-zone:hover, .drop-zone.drag-over { border-color: var(--brand); background: #f5f7ff; }
+.audit-list { margin: 0; padding: 0; list-style: none; }
+.audit-list > li { position: relative; padding: 0 0 20px 20px; border-left: 1px solid #e5eaf3; font-size: 12px; color: #79859d; }
+.audit-list > li::before { position: absolute; content: ""; left: -4px; top: 6px; width: 7px; height: 7px; border-radius: 50%; background: #9eaddc; box-shadow: 0 0 0 4px #fff; }
+.audit-list > li:last-child { border-left-color: transparent; padding-bottom: 0; }
+.small-label { color: #919caf; font-size: 10px; letter-spacing: .5px; }
+.segmented { display: inline-flex; align-items: center; gap: 2px; padding: 3px; border: 1px solid #e9edf4; border-radius: 6px; background: #f8f9fc; }
+.segmented button { padding: 3px 9px; border: 0; border-radius: 4px; background: transparent; color: #919bad; font-size: 10px; }
+.segmented button.active, .segmented button[aria-selected="true"] { color: #6575bb; background: #fff; box-shadow: 0 1px 4px rgb(40 54 90 / 8%); }
+
+dialog.modal { width: min(610px, calc(100vw - 40px)); max-height: calc(100dvh - 60px); padding: 0; border: 1px solid #e5e9f1; border-radius: 13px; background: #fff; color: var(--ink); box-shadow: 0 24px 80px rgb(24 34 60 / 20%); overflow: auto; }
+dialog.modal[open] { animation: modal-in .18s ease-out; }
+dialog::backdrop { background: rgb(24 34 56 / 36%); backdrop-filter: blur(3px); }
+.modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 15px; padding: 23px 25px 18px; border-bottom: 1px solid var(--line); }
+.modal-head h2 { font-size: 18px; margin: 0; }
+.modal-head p { font-size: 11px; color: var(--muted); margin: 5px 0 0; }
+.modal-head .close-modal { margin: -4px -6px 0 0; flex: 0 0 32px; }
+.modal-body { padding: 23px 25px; }
+.modal-foot { display: flex; justify-content: flex-end; align-items: center; gap: 9px; padding: 16px 25px; border-top: 1px solid var(--line); background: #fcfdff; }
+.modal-foot .button { min-height: 36px; }
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 17px; }
+.field { display: flex; flex-direction: column; min-width: 0; gap: 7px; }
+.field.full { grid-column: 1 / -1; }
+.field label { color: #59677f; font-size: 12px; font-weight: 500; }
+.field label .required { color: var(--red); margin-left: 3px; }
+.field input, .field select, .field textarea, input.form-control, select.form-control, textarea.form-control { width: 100%; min-height: 39px; border: 1px solid #dfe5ee; border-radius: 6px; padding: 9px 11px; background: #fff; color: var(--ink-soft); font-size: 12px; line-height: 1.5; transition: border-color .15s ease, box-shadow .15s ease; }
+.field textarea { min-height: 86px; resize: vertical; }
+.field input::placeholder, .field textarea::placeholder { color: #b0b8c7; }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: #96a4eb; box-shadow: 0 0 0 3px #f0f2ff; }
+.field input[readonly], .field input:disabled, .field select:disabled { background: #f7f9fc; color: #8996aa; }
+.field input[type="checkbox"], .field input[type="radio"] { width: 15px; min-height: 15px; height: 15px; padding: 0; accent-color: var(--brand); }
+.field small { color: #9ba5b5; font-size: 10px; line-height: 1.6; }
+.preview-box { padding: 14px 16px; margin-top: 20px; background: #f7f9fe; border: 1px solid #e6ebf8; border-radius: 7px; }
+.preview-row { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; font-size: 12px; color: #7b89a4; padding: 5px 0; }
+.preview-row strong { color: #4f60ad; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.error-message { color: var(--red); background: #fff5f5; padding: 10px 12px; border-radius: 6px; font-size: 12px; margin-top: 14px; }
+.error-message:empty { display: none; }
+.toast { position: fixed; z-index: 100; bottom: 28px; left: calc(50% + 115px); transform: translate(-50%, 18px); opacity: 0; pointer-events: none; display: flex; align-items: center; gap: 8px; padding: 12px 18px; max-width: calc(100vw - 36px); border-radius: 8px; background: #28354e; color: #fff; font-size: 12px; box-shadow: 0 8px 24px rgb(20 33 59 / 20%); transition: opacity .2s ease, transform .2s ease; }
+.toast.visible { opacity: 1; transform: translate(-50%, 0); }
+.sidebar-overlay, .sidebar-backdrop { display: none; }
+[hidden] { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+@keyframes modal-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (min-width: 1600px) {
+  main#main { padding: 38px 42px 50px; }
+  .topbar { padding-right: 42px; padding-left: 42px; }
+  .kpi-card { min-height: 145px; padding: 22px; }
+  .dashboard-grid { gap: 24px; }
+}
+@media (max-width: 1270px) {
+  .sidebar { width: 208px; flex-basis: 208px; padding-right: 12px; padding-left: 12px; }
+  .nav-item.active::before { left: -12px; }
+  .workspace { margin-left: 208px; }
+  .topbar { padding-right: 24px; padding-left: 24px; }
+  main#main { padding: 27px 24px 38px; }
+  .kpi-grid { gap: 12px; }
+  .kpi-card { padding: 17px 15px; }
+  .kpi-icon { top: 14px; right: 13px; width: 24px; height: 24px; }
+  .kpi-value { font-size: 25px; }
+  .dashboard-grid { gap: 18px; grid-template-columns: minmax(0, 1.7fr) minmax(260px, 1fr); }
+  .panel-head { padding: 17px 17px 14px; }
+  .panel-body { padding: 0 17px 18px; }
+  td, th { padding-left: 16px; padding-right: 16px; }
+  .toast { left: calc(50% + 104px); }
+}
+@media (max-width: 1100px) {
+  .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kpi-value { font-size: 28px; }
+  .kpi-card { min-height: 125px; }
+  .dashboard-grid { grid-template-columns: minmax(0, 1fr); }
+  .dashboard-grid > .stack { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
+  .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .three-column { gap: 15px; }
+  .detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .page-head { align-items: flex-start; }
+  .page-actions { padding-top: 22px; }
+  h1 { font-size: 25px; }
+  .topbar-actions { gap: 10px; }
+}
+@media (max-width: 800px) {
+  .sidebar { width: 230px; transform: translateX(-100%); transition: transform .22s ease; box-shadow: 12px 0 30px rgb(30 42 70 / 10%); }
+  .sidebar.open, body.nav-open .sidebar, .app-shell.nav-open .sidebar { transform: translateX(0); }
+  body.nav-open { overflow: hidden; }
+  .sidebar-overlay.visible, .sidebar-backdrop.visible, body.nav-open .sidebar-overlay, body.nav-open .sidebar-backdrop, .app-shell.nav-open .sidebar-overlay, .app-shell.nav-open .sidebar-backdrop { display: block; position: fixed; inset: 0; z-index: 25; background: rgb(30 40 62 / 30%); border: 0; backdrop-filter: blur(2px); }
+  .workspace { margin-left: 0; }
+  .mobile-menu { display: inline-flex; flex: 0 0 32px; margin-left: -5px; }
+  .topbar { padding: 12px 20px; min-height: 60px; gap: 10px; }
+  .breadcrumb { margin-right: auto; }
+  .topbar-actions { margin-left: auto; gap: 10px; }
+  .topbar-actions .avatar { width: 28px; height: 28px; flex-basis: 28px; font-size: 10px; }
+  main#main { padding: 25px 20px 40px; }
+  .page-head { margin-bottom: 22px; }
+  .page-subtitle { max-width: 440px; }
+  .toast { left: 50%; }
+}
+@media (max-width: 600px) {
+  :root { font-size: 16px; }
+  .topbar { min-height: 57px; padding: 11px 17px; }
+  .topbar-actions { gap: 7px; }
+  .topbar-actions .demo-badge { display: none; }
+  .topbar-actions > .button { font-size: 10px; min-height: 29px; padding: 5px 8px; }
+  .breadcrumb { font-size: 11px; gap: 6px; }
+  .breadcrumb > :not(:last-child):not(svg) { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  main#main { padding: 23px 16px 34px; }
+  h1 { font-size: 25px; }
+  .page-head { display: block; margin-bottom: 20px; }
+  .eyebrow { font-size: 9px; margin-bottom: 7px; }
+  .page-subtitle { font-size: 11px; max-width: 100%; }
+  .page-actions { padding-top: 16px; gap: 8px; }
+  .page-actions .button { min-height: 34px; padding: 7px 11px; font-size: 11px; }
+  .kpi-grid { gap: 10px; margin-bottom: 16px; }
+  .kpi-card { min-height: 128px; padding: 15px 13px; border-radius: 10px; }
+  .kpi-label { font-size: 11px; max-width: calc(100% - 25px); }
+  .kpi-value { font-size: 24px; margin-top: 14px; margin-bottom: 8px; letter-spacing: -.7px; }
+  .kpi-value small, .kpi-value .currency { font-size: 13px; margin-right: 2px; }
+  .kpi-meta { font-size: 9px; gap: 4px; }
+  .kpi-icon { top: 12px; right: 10px; width: 22px; height: 22px; border-radius: 5px; }
+  .kpi-icon svg { width: 12px; height: 12px; }
+  .dashboard-grid { gap: 16px; margin-bottom: 16px; }
+  .dashboard-grid > .stack { display: flex; flex-direction: column; gap: 16px; }
+  .dashboard-grid > .stack > * { width: 100%; }
+  .panel { border-radius: 10px; }
+  .panel + .panel { margin-top: 16px; }
+  .panel-head { padding: 16px 16px 13px; }
+  .panel-body { padding: 0 16px 18px; }
+  .panel-head h2 { font-size: 14px; }
+  .panel-subtitle { font-size: 10px; }
+  .panel-footer { padding: 12px 16px; }
+  .table-wrap { -webkit-overflow-scrolling: touch; }
+  .table-wrap table { min-width: 620px; }
+  th { font-size: 11px; padding: 11px 15px; }
+  td { font-size: 14px; padding: 14px 15px; }
+  .table-toolbar { gap: 12px; padding: 13px 15px; }
+  .table-toolbar .search-input { flex: 1; width: 100%; min-width: 160px; }
+  .filter-tabs { gap: 2px; }
+  .filter-tab { font-size: 10px; padding: 5px 8px; }
+  .chart-bars { height: 160px; gap: 8px; padding-right: 5px; padding-left: 5px; }
+  .chart-group { gap: 5px; }
+  .chart-bar { width: min(22px, 38%); }
+  .chart-label { font-size: 9px; }
+  .legend { font-size: 9px; gap: 11px; }
+  .two-column, .three-column, .card-grid, .steps-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .detail-grid { gap: 18px 15px; }
+  .detail-item { font-size: 12px; }
+  .detail-item > label, .detail-item > .label, .detail-item > small { font-size: 10px; }
+  .summary-strip { gap: 14px 18px; padding: 15px; margin-bottom: 16px; }
+  .summary-strip strong, .stat-inline strong { font-size: 16px; }
+  .summary-strip .stat-inline { padding-right: 17px; }
+  .stat-inline { font-size: 11px; gap: 6px; }
+  .page-tabs { margin-bottom: 19px; gap: 22px; }
+  .page-tab { font-size: 12px; }
+  .flow-step { font-size: 10px; }
+  .notice { font-size: 11px; }
+  dialog.modal { position: fixed; width: 100%; max-width: 100%; max-height: calc(100dvh - 30px); margin: auto 0 0; inset: auto 0 0; border-radius: 14px 14px 0 0; border-bottom: 0; }
+  .modal-head { padding: 21px 20px 16px; }
+  .modal-head h2 { font-size: 18px; }
+  .modal-body { padding: 21px 20px; }
+  .modal-foot { padding: 15px 20px max(17px, env(safe-area-inset-bottom)); position: sticky; bottom: 0; }
+  .modal-foot .button { flex: 1; min-height: 39px; font-size: 12px; }
+  .form-grid { gap: 16px 13px; }
+  .field input, .field select, .field textarea { font-size: 16px; min-height: 42px; padding: 9px 10px; }
+  .field label { font-size: 11px; }
+  .preview-box { padding: 12px; }
+  .preview-row { font-size: 11px; }
+  .toast { bottom: 20px; width: max-content; font-size: 12px; padding: 12px 15px; }
+}
+@media (max-width: 370px) {
+  main#main { padding-left: 12px; padding-right: 12px; }
+  .kpi-value { font-size: 22px; }
+  .kpi-card { padding-left: 11px; padding-right: 11px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .topbar-actions .avatar { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+@media print {
+  :root, body { background: #fff; }
+  .sidebar, .topbar, .page-actions, .table-toolbar, .toast, .mobile-menu, dialog { display: none !important; }
+  .workspace { margin: 0; }
+  main#main { max-width: none; padding: 0; }
+  .panel, .kpi-card, .customer-card { box-shadow: none; break-inside: avoid; }
+  .table-wrap { overflow: visible; }
+  .table-wrap table { min-width: 0; }
+  .dashboard-grid { grid-template-columns: 2fr 1fr; }
+  .kpi-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* Page-specific additions to the shared visual system. */
+.sidebar-bottom{margin-top:auto}.brand{text-decoration:none;color:inherit}.brand>span:last-child{display:grid;gap:4px}.sidebar-note{margin:0 17px 16px;padding:13px;background:#f0f2f7;border-radius:9px;font-size:12px;color:#596579}.sidebar-note small{display:block;margin-top:6px;font-size:11px}.status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#28a47c;margin-right:7px}.app-footer{padding:10px 36px 24px;color:#98a0af;font-size:12px}.month-picker{display:flex;align-items:center;gap:8px;color:#677286;font-size:12px}.month-picker input{font:inherit;padding:7px 8px;background:#fff;border:1px solid #e1e5ec;border-radius:7px;color:#384055}.sidebar-overlay{display:none}.nav-item{width:100%;text-decoration:none}.nav-item svg{flex-shrink:0}.button svg{width:16px;height:16px}.row{display:flex;align-items:center;gap:10px}.wrap{flex-wrap:wrap}.between{justify-content:space-between}.table-wrap td .muted{display:block;font-size:11px;margin-top:5px}.amount{font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}.submetric{font-size:11px;color:#8d96a6;margin-top:5px}.dashboard-grid{align-items:start}.dashboard-main,.dashboard-rail{display:grid;gap:20px}.big-number{font-size:30px;font-weight:650;letter-spacing:-.8px;font-variant-numeric:tabular-nums}.profit-head{background:#f1f3ff;padding:20px;border-radius:12px 12px 0 0}.profit-head .small-label{color:#626ba3}.profit-head .big-number{margin-top:9px;color:#3546bc}.account-icon svg{width:17px;height:17px}.account-icon.business{background:#edf0fd;color:#5368db}.account-icon.personal{background:#eaf5f2;color:#2f8872}.kpi-card{cursor:pointer;transition:transform .15s,box-shadow .15s}.kpi-card:hover{transform:translateY(-2px);box-shadow:0 5px 15px #172b5210}.kpi-card:focus-visible{outline:3px solid #a8b5ff;outline-offset:3px}.kpi-icon{display:flex}.kpi-label{display:flex;align-items:center;justify-content:space-between}.kpi-label svg{width:18px;height:18px}.kpi-value small{font-size:17px;color:#788396;margin-right:4px;font-weight:400}.summary-strip strong{font-variant-numeric:tabular-nums}.summary-strip>button{border:0;background:none;color:inherit;cursor:pointer;text-align:left;font:inherit}.compact-chart{display:flex;align-items:flex-end;justify-content:space-around;height:156px;padding:14px 16px 2px;gap:8px}.bar-day{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;position:relative}.bar-pair{display:flex;gap:4px;align-items:flex-end;height:120px;width:70%;max-width:42px}.bar-pair i{width:50%;background:#5266db;border-radius:4px 4px 0 0;min-height:2px}.bar-pair i.out{background:#dce2f3}.bar-day>span{font-size:10px;color:#8c96a7;margin-top:8px}.chart-key{display:flex;gap:14px;color:#7b8496;font-size:11px}.chart-key i{width:7px;height:7px;display:inline-block;border-radius:2px;margin-right:5px;background:#5266db}.chart-key i.out{background:#dce2f3}.account-select{font:inherit;max-width:210px;border:1px solid #e0e5ee;border-radius:7px;padding:9px;background:#fff;color:#47536a}.full-width{width:100%}.panel .table-wrap{border:0;border-radius:0 0 12px 12px}.panel-head .button{white-space:nowrap}.task-count{display:inline-flex;align-items:center;justify-content:center;border-radius:7px;width:30px;height:30px;background:#fff4df;color:#a77719;font-weight:700}.task-text{flex:1}.task-text strong{font-size:13px;display:block}.task-text small{font-size:11px;color:#8d96a6}.list-row.button-row{border:0;border-bottom:1px solid #eef0f5;background:none;width:100%;font:inherit;text-align:left;cursor:pointer}.list-row.button-row:last-child{border:0}.button-row:hover{background:#f9faff}.data-note{font-size:12px;color:#9199a8;line-height:1.8}.customer-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}.customer-card{padding:16px;text-align:left;border:1px solid #e4e8ef;background:#fff;border-radius:10px;cursor:pointer;font:inherit}.customer-card.selected{border-color:#7182e7;background:#f6f7ff}.customer-card .amount{font-size:23px;display:block;margin:12px 0 5px}.table-actions{display:flex;gap:12px;white-space:nowrap}.table-actions button,.text-button{border:0;background:none;padding:0;color:#4b5fd2;font:inherit;font-size:12px;cursor:pointer}.text-button:hover,.table-actions button:hover{text-decoration:underline}.sn-code{font-family:ui-monospace,SFMono-Regular,monospace;font-size:12px;color:#626f84}.statement-head{padding:18px 20px;background:#f7f8fc;display:flex;justify-content:space-between;gap:20px}.form-grid input,.form-grid select,.form-grid textarea{min-width:0;width:100%;box-sizing:border-box}.field textarea{min-height:90px;resize:vertical}.modal-body .form-grid+.preview-box{margin-top:18px}.preview-box .amount{font-size:14px}.preview-box .positive{color:#2b8b70}.preview-box h3{font-size:13px;margin:0 0 10px}.modal-foot{display:flex;justify-content:flex-end;gap:10px}.modal-head .muted{font-size:12px;margin:6px 0 0}.modal-head{align-items:flex-start}.modal-head h2{font-size:19px;margin:0}.close-modal{border:0;background:none;font-size:24px;line-height:1;color:#8590a1;cursor:pointer}.error-message:empty{display:none}.error-message{margin-top:14px;background:#fff0ee;color:#b74339;padding:10px 12px;border-radius:7px;font-size:13px}.allocation-preview{max-height:150px;overflow:auto}.preview-row{gap:12px}.detail-item{overflow-wrap:anywhere}.detail-item dt{font-size:12px;color:#8992a4;margin-bottom:8px}.detail-item dd{margin:0;font-size:15px;font-weight:550}.detail-grid{margin:0 0 20px}.timeline{list-style:none;padding:0;margin:18px 0}.timeline li{position:relative;margin-left:7px;padding:0 0 22px 24px;border-left:1px solid #dee3ed;font-size:13px;line-height:1.8}.timeline li:last-child{border-left-color:transparent;padding-bottom:0}.timeline li:before{content:'';position:absolute;width:8px;height:8px;background:#6072da;border:4px solid #f0f3ff;border-radius:50%;left:-8px;top:2px}.timeline small{display:block;color:#8d95a5}.import-file{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid #edf0f5}.file-icon{color:#48967b;background:#ecf8f2;padding:10px;border-radius:8px;align-self:flex-start}.import-file>div:nth-child(2){flex:1}.import-file strong{font-size:13px}.import-file small{display:block;margin-top:5px;color:#9099aa;font-size:11px}.drop-zone{cursor:default}.settings-row{display:flex;justify-content:space-between;gap:20px;padding:15px 0;border-bottom:1px solid #edf0f5}.settings-row:last-child{border:0}.settings-row strong{display:block;font-size:13px}.settings-row small{font-size:12px;color:#8d96a6}.profit-table .profit-positive{color:#23856a}.compact-summary{display:flex;gap:20px;flex-wrap:wrap;padding:16px 20px}.compact-summary>span{font-size:12px;color:#8993a5}.compact-summary strong{margin-left:8px;color:#384158}.formula-total{padding-top:16px;margin-top:12px;border-top:1px solid #e6eaf2;display:flex;justify-content:space-between;gap:14px;font-weight:650}.number-muted{font-size:11px;color:#8d96a6;display:block}.success-box{border:1px solid #d7eee2;background:#f1faf5;padding:16px;border-radius:9px;color:#2f805f;font-size:13px}.check-list{padding-left:20px;line-height:2;font-size:13px;color:#657187}.invoice-note{font-size:12px;line-height:1.8;color:#8992a3}.screenreader-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+@media(max-width:1100px){.customer-cards{grid-template-columns:repeat(2,1fr)}.topbar-actions{gap:8px}.month-picker>span{display:none}.dashboard-grid{grid-template-columns:1fr!important}.dashboard-rail{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px){.app-footer{padding:12px 18px 24px}.demo-badge{font-size:10px;padding:5px 7px}.month-picker input{max-width:120px;font-size:11px}.topbar-actions{gap:6px}.topbar-actions #helpButton{display:none}.breadcrumb{font-size:12px}.breadcrumb>span{margin:0 5px}.dashboard-rail{grid-template-columns:1fr}.customer-cards{gap:9px}.customer-card{padding:12px}.customer-card .amount{font-size:20px}.statement-head{flex-direction:column;gap:8px}.form-grid{grid-template-columns:1fr!important}.field.full{grid-column:auto}.page-actions .button{font-size:12px;padding:9px 11px}.summary-strip{row-gap:12px}.sidebar-overlay.visible{display:block;position:fixed;inset:0;width:100%;height:100%;z-index:39;border:0;background:#17233b70}.sidebar{z-index:40}.page-head h1{font-size:25px}.table-toolbar{flex-wrap:wrap}.search-input{max-width:100%}.bar-pair{width:80%}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
+</style>
+</head>
+<body>
+  <div class="app-shell">
+    <button class="sidebar-overlay" id="overlay" aria-label="关闭导航"></button>
+    <aside class="sidebar" id="sidebar">
+      <a href="#overview" class="brand" aria-label="财务工作台首页"><span class="brand-mark">财</span><span><span class="brand-name">财务工作台</span><span class="brand-sub">3C 供应链 · 经营账</span></span></a>
+      <div class="nav-section">工作空间</div><nav id="nav" aria-label="主导航"></nav>
+      <div class="sidebar-bottom"><div class="sidebar-note"><span class="status-dot"></span>原型演示空间<small>模拟数据 · 当前浏览器保存</small></div><div class="sidebar-foot"><span class="avatar">财</span><div><strong id="roleName">财务视角</strong><small>全部业务账户</small></div><button class="button ghost small" id="switchRole" title="切换演示视角" aria-label="切换演示视角">⇄</button></div></div>
+    </aside>
+    <div class="workspace">
+      <header class="topbar"><div class="row"><button class="mobile-menu button ghost" id="menuButton" aria-label="打开导航">☰</button><div class="breadcrumb">工作空间 <span>/</span> <strong id="crumb">经营概览</strong></div></div><div class="topbar-actions"><span class="demo-badge">交互原型 · 演示数据</span><label class="month-picker"><span>期间</span><input id="monthPicker" type="month" value="2026-10" aria-label="报表月份"></label><button class="button ghost small" id="helpButton" aria-label="原型说明">?</button></div></header>
+      <main id="main" tabindex="-1"></main>
+      <footer class="app-footer">仅供确认页面与流程 · 未接入真实账本、银行或博远 ERP</footer>
+    </div>
+  </div>
+  <dialog id="modal" class="modal" aria-labelledby="modalTitle"></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <noscript><p>此交互原型需要启用 JavaScript。</p></noscript>
+  <script type="module">
+/** All money is stored as integer cents. This file contains only simulated data. */
+const money = cents => new Intl.NumberFormat('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format((Number(cents) || 0) / 100);
+
+const fail = message => { throw new Error(message); };
+const clone = value => JSON.parse(JSON.stringify(value));
+const find = (items, id, label) => items.find(item => item.id === id) || fail(`${label}不存在，请重新选择`);
+const integer = (value, label, minimum = 1) => {
+  if (!Number.isSafeInteger(value) || value < minimum) fail(`${label}必须是${minimum ? '大于零的' : '非负'}整数${label.includes('数量') ? '' : '分'}`);
+  return value;
+};
+const validDate = date => {
+  const parsed = typeof date === 'string' ? new Date(`${date}T00:00:00Z`) : new Date(NaN);
+  if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date) fail('请输入有效日期');
+  return date;
+};
+const validMonth = month => {
+  if (typeof month !== 'string' || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) fail('请输入有效月份');
+  return month;
+};
+const nextId = (state, prefix) => `${prefix}-${++state.sequence}`;
+const checkCustomerSettlementDate = (state, customerId, date) => {
+  const sales = state.sales.filter(sale => sale.customerId === customerId);
+  const saleIds = new Set(sales.map(sale => sale.id));
+  const hasLaterSettlement = state.recognitions.some(row => saleIds.has(row.saleId) && row.date > date)
+    || sales.some(sale => sale.returnedDate && sale.returnedDate > date)
+    || state.audit.some(row => row.type === 'receipt' && (row.customerId || row.payload?.customerId) === customerId && row.date > date);
+  if (hasLaterSettlement) fail('该客户已有更晚的收款、退货或余额抵扣记录；历史补录需要重算，请按日期顺序录入演示账');
+};
+const moveCash = (state, accountId, amount, event, type, note = event.note) => {
+  const account = find(state.accounts, accountId, '账户');
+  if (account.balance + amount < 0) fail(`${account.name}余额不足`);
+  account.balance += amount;
+  state.ledger.push({ id: nextId(state, 'txn'), date: event.date, type, accountId, amount, note: note || '', actionId: event.id });
+};
+const recognize = (state, sale, amount, event) => {
+  if (!amount) return;
+  if (event.date < sale.date) fail('利润确认日期不能早于销售日期');
+  // Corrections are expensed in their own month, so future receipts use originalFreight.
+  const margin = sale.amount - sale.cost - sale.originalFreight;
+  sale.paid += amount;
+  const cumulativeProfit = Math.round(margin * sale.paid / sale.amount);
+  const profit = cumulativeProfit - sale.recognizedProfit;
+  sale.recognizedProfit = cumulativeProfit;
+  state.recognitions.push({ id: nextId(state, 'rec'), date: event.date, saleId: sale.id, amount, profit, note: event.note || '销售回款确认毛利', actionId: event.id });
+};
+
+function applyAction(input, action) {
+  if (!action || typeof action.type !== 'string') fail('请选择有效操作');
+  const state = clone(input);
+  const date = validDate(action.date || (action.type === 'tax' ? `${validMonth(action.month)}-15` : state.today));
+  const event = { id: nextId(state, 'action'), date, note: String(action.note || ''), type: action.type };
+  let resultId;
+  switch (action.type) {
+    case 'receipt': {
+      const amount = integer(action.amount, '收款金额');
+      const customer = find(state.customers, action.customerId, '客户');
+      checkCustomerSettlementDate(state, customer.id, date);
+      const openSales = state.sales.filter(sale => sale.customerId === customer.id && !sale.returned && sale.paid < sale.amount);
+      const eligible = openSales.filter(sale => sale.date <= date).sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id, 'en', { numeric: true }));
+      const eligibleAmount = eligible.reduce((sum, sale) => sum + sale.amount - sale.paid, 0);
+      if (amount > eligibleAmount && openSales.some(sale => sale.date > date)) fail('本次历史收款超过截至当日的未收货款，且已有后续销售；余额抵扣需要重算，请按日期顺序录入演示账');
+      moveCash(state, action.accountId, amount, event, 'receipt', event.note || `${customer.name}收款`);
+      customer.balance -= amount;
+      let remaining = amount;
+      for (const sale of eligible) {
+        const allocated = Math.min(remaining, sale.amount - sale.paid);
+        recognize(state, sale, allocated, event);
+        remaining -= allocated;
+        if (!remaining) break;
+      }
+      event.unallocated = remaining;
+      event.customerId = customer.id;
+      break;
+    }
+    case 'transfer': {
+      integer(action.amount, '转账金额');
+      if (action.fromId === action.toId) fail('转出和转入账户不能相同');
+      find(state.accounts, action.toId, '转入账户');
+      moveCash(state, action.fromId, -action.amount, event, 'transfer_out', event.note || '内部转账转出');
+      moveCash(state, action.toId, action.amount, event, 'transfer_in', event.note || '内部转账转入');
+      break;
+    }
+    case 'boss_in':
+      integer(action.amount, '垫资金额');
+      moveCash(state, action.accountId, action.amount, event, 'boss_in', event.note || '老板向公司垫资');
+      state.bossOwed += action.amount;
+      break;
+    case 'supplier_pay': {
+      integer(action.amount, '预付金额');
+      const supplier = find(state.suppliers, action.supplierId, '供应商');
+      moveCash(state, action.accountId, -action.amount, event, 'supplier_pay', event.note || `向${supplier.name}预付货款`);
+      supplier.available += action.amount;
+      break;
+    }
+    case 'boss_pay':
+      integer(action.amount, '代付金额');
+      state.bossOwed += action.amount;
+      state.expenses.push({ id: nextId(state, 'expense'), date, amount: action.amount, category: action.category || '其他费用', source: 'boss', accountId: null, note: event.note || '老板直接代付公司费用', actionId: event.id });
+      break;
+    case 'boss_repay':
+      integer(action.amount, '还款金额');
+      if (action.amount > state.bossOwed) fail('还款金额不能超过应还老板款');
+      moveCash(state, action.accountId, -action.amount, event, 'boss_repay', event.note || '公司归还老板垫款');
+      state.bossOwed -= action.amount;
+      break;
+    case 'expense':
+      integer(action.amount, '费用金额');
+      moveCash(state, action.accountId, -action.amount, event, 'expense', event.note || action.category || '公司费用');
+      state.expenses.push({ id: nextId(state, 'expense'), date, amount: action.amount, category: action.category || '其他费用', source: 'company', accountId: action.accountId, note: event.note || '', actionId: event.id });
+      break;
+    case 'tax':
+      validMonth(action.month);
+      integer(action.amount, '税费金额', 0);
+      event.previousAmount = state.taxes[action.month] || 0;
+      state.taxes[action.month] = action.amount;
+      break;
+    case 'freight_adjust': {
+      integer(action.amount, '补充运费');
+      const sale = find(state.sales, action.saleId, '销售单');
+      if (sale.returned) fail('退货单不能补录销售运费');
+      if (date < sale.date) fail('补录日期不能早于销售日期');
+      sale.freight += action.amount;
+      state.adjustments.push({ id: nextId(state, 'adjustment'), date, saleId: sale.id, amount: action.amount, kind: 'freight', note: event.note || '补录运费，仅计入本月', actionId: event.id });
+      break;
+    }
+    case 'purchase_lock': {
+      integer(action.qty, '采购数量');
+      integer(action.unitPrice, '采购单价');
+      const supplier = find(state.suppliers, action.supplierId, '供应商');
+      find(state.products, action.productId, '产品');
+      const amount = action.qty * action.unitPrice;
+      if (!Number.isSafeInteger(amount)) fail('采购金额过大');
+      if (amount > supplier.available) fail('供应商可用预付款不足');
+      supplier.available -= amount;
+      resultId = action.id || nextId(state, 'purchase');
+      if (state.purchases.some(purchase => purchase.id === resultId)) fail('采购单编号重复');
+      state.purchases.push({ id: resultId, date, supplierId: supplier.id, productId: action.productId, qty: action.qty, unitPrice: action.unitPrice, status: 'locked', lockedDate: date, shippedDate: null, receivedDate: null, freight: 0, note: event.note || '', actionId: event.id });
+      break;
+    }
+    case 'purchase_ship': {
+      const purchase = find(state.purchases, action.purchaseId, '采购单');
+      if (purchase.status !== 'locked') fail('只有待发货采购单可以确认发货');
+      if (date < purchase.lockedDate) fail('发货日期不能早于锁价日期');
+      purchase.status = 'shipped';
+      purchase.shippedDate = date;
+      break;
+    }
+    case 'purchase_receive': {
+      const purchase = find(state.purchases, action.purchaseId, '采购单');
+      if (purchase.status !== 'shipped') fail('只有在途采购单可以确认到货，不能重复入库');
+      if (date < purchase.shippedDate) fail('到货日期不能早于发货日期');
+      integer(action.freight, '到货运费', 0);
+      if (!Array.isArray(action.sns) || action.sns.length !== purchase.qty) fail(`请输入 ${purchase.qty} 个唯一 SN，每台一条`);
+      const sns = action.sns.map(sn => String(sn).trim());
+      if (sns.some(sn => !sn) || new Set(sns.map(sn => sn.toUpperCase())).size !== sns.length) fail('SN 不能为空或重复');
+      if (state.inventory.some(item => sns.some(sn => sn.toUpperCase() === item.sn.toUpperCase()))) fail('SN 已在库存台账中，请检查重复录入');
+      const freightPerUnit = Math.floor(action.freight / purchase.qty);
+      const remainder = action.freight % purchase.qty;
+      sns.forEach((sn, index) => state.inventory.push({ id: nextId(state, 'stock'), date, lastStockInDate: date, sn, productId: purchase.productId, cost: purchase.unitPrice + freightPerUnit + (index < remainder ? 1 : 0), status: 'in_stock', purchaseId: purchase.id, note: event.note || '采购到货入库', actionId: event.id }));
+      purchase.status = 'received';
+      purchase.receivedDate = date;
+      purchase.freight = action.freight;
+      break;
+    }
+    case 'sale_create': {
+      integer(action.amount, '销售金额');
+      integer(action.freight ?? 0, '销售运费', 0);
+      const customer = find(state.customers, action.customerId, '客户');
+      checkCustomerSettlementDate(state, customer.id, date);
+      const stock = find(state.inventory, action.inventoryId, '库存');
+      if (stock.status !== 'in_stock') fail('此 SN 已售出，不能重复销售');
+      const stockInDate = stock.lastStockInDate || stock.date;
+      if (stockInDate && date < stockInDate) fail('销售日期不能早于最近入库或退货回仓日期');
+      const credit = Math.min(Math.max(0, -customer.balance), action.amount);
+      resultId = action.id || nextId(state, 'sale');
+      if (state.sales.some(sale => sale.id === resultId)) fail('销售单编号重复');
+      const sale = { id: resultId, date, customerId: customer.id, productId: stock.productId, sn: stock.sn, inventoryId: stock.id, amount: action.amount, cost: stock.cost, freight: action.freight || 0, originalFreight: action.freight || 0, paid: 0, returned: false, recognizedProfit: 0, note: event.note || '', actionId: event.id };
+      state.sales.push(sale);
+      stock.status = 'sold';
+      customer.balance += action.amount;
+      recognize(state, sale, credit, event);
+      event.creditUsed = credit;
+      break;
+    }
+    case 'sale_return': {
+      const sale = find(state.sales, action.saleId, '销售单');
+      if (sale.returned) fail('此销售单已退货，不能重复退货');
+      if (date < sale.date || state.recognitions.some(rec => rec.saleId === sale.id && rec.date > date)) fail('退货日期不能早于销售或收款日期');
+      checkCustomerSettlementDate(state, sale.customerId, date);
+      if (state.sales.some(item => item.customerId === sale.customerId && item.date > date)) fail('该客户已录入更晚的销售；历史退货需要重算，请按日期顺序录入演示账');
+      const stock = find(state.inventory, sale.inventoryId, '库存');
+      if (stock.status !== 'sold') fail('库存状态与销售单不一致');
+      const customer = find(state.customers, sale.customerId, '客户');
+      customer.balance -= sale.amount;
+      stock.status = 'in_stock';
+      stock.lastStockInDate = date;
+      sale.returned = true;
+      sale.returnedDate = date;
+      // Reverse only profit already recognized; original shipping remains a real loss.
+      state.adjustments.push({ id: nextId(state, 'adjustment'), date, saleId: sale.id, amount: sale.recognizedProfit, kind: 'return_reversal', note: event.note || '整单退货冲回已确认利润', actionId: event.id });
+      if (sale.originalFreight) state.adjustments.push({ id: nextId(state, 'adjustment'), date, saleId: sale.id, amount: sale.originalFreight, kind: 'return_freight', note: '退货保留已发生的原始运费损失', actionId: event.id });
+      // A returned payment can also settle other open sales for this customer.
+      const remainingSales = state.sales.filter(item => item.customerId === customer.id && !item.returned && item.date <= date && item.paid < item.amount).sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id, 'en', { numeric: true }));
+      let reusable = sale.paid;
+      for (const item of remainingSales) {
+        const allocated = Math.min(reusable, item.amount - item.paid);
+        recognize(state, item, allocated, event);
+        reusable -= allocated;
+        if (!reusable) break;
+      }
+      event.creditCreated = reusable;
+      break;
+    }
+    default:
+      fail('暂不支持此操作');
+  }
+  event.payload = clone(action);
+  if (resultId) event.resultId = resultId;
+  state.audit.push(event);
+  state.lastAction = event;
+  return state;
+}
+
+function summary(state, month = '2026-10') {
+  validMonth(month);
+  const inMonth = row => row.date.startsWith(month);
+  const sum = (rows, key) => rows.reduce((total, row) => total + row[key], 0);
+  const salesProfit = sum(state.recognitions.filter(inMonth), 'profit');
+  const returnReversal = sum(state.adjustments.filter(row => inMonth(row) && row.kind === 'return_reversal'), 'amount');
+  const expenses = sum(state.expenses.filter(inMonth), 'amount');
+  const tax = state.taxes[month] || 0;
+  const adjustments = sum(state.adjustments.filter(row => inMonth(row) && row.kind !== 'return_reversal'), 'amount');
+  const stock = state.inventory.filter(item => item.status === 'in_stock');
+  return {
+    totalCash: sum(state.accounts, 'balance'),
+    receivables: sum(state.customers.filter(customer => customer.balance > 0), 'balance'),
+    customerCredit: -sum(state.customers.filter(customer => customer.balance < 0), 'balance'),
+    supplierAvailable: sum(state.suppliers, 'available'),
+    bossOwed: state.bossOwed,
+    salesProfit, returnReversal, expenses, tax, adjustments,
+    profit: salesProfit - returnReversal - expenses - tax - adjustments,
+    inventoryValue: sum(stock, 'cost'),
+    inventoryQty: stock.length,
+    inTransitQty: sum(state.purchases.filter(purchase => purchase.status === 'shipped'), 'qty'),
+  };
+}
+
+function createInitialState() {
+  let state = {
+    schemaVersion: 1, today: '2026-10-15', sequence: 0,
+    accounts: [
+      { id: 'acc-corp-1', name: '模拟公司 · 工商对公', type: 'corporate', balance: 9000000 },
+      { id: 'acc-corp-2', name: '模拟公司 · 招商对公', type: 'corporate', balance: 6500000 },
+      { id: 'acc-card-1', name: '业务卡 A · 尾号 1001', type: 'business', balance: 2400000 },
+      { id: 'acc-card-2', name: '业务卡 B · 尾号 1002', type: 'business', balance: 1800000 },
+      { id: 'acc-card-3', name: '业务卡 C · 尾号 1003', type: 'business', balance: 1500000 },
+      { id: 'acc-card-4', name: '业务卡 D · 尾号 1004', type: 'business', balance: 1300000 },
+    ],
+    customers: [
+      { id: 'cus-1', name: '模拟客户 · 星河数码', balance: 0 },
+      { id: 'cus-2', name: '模拟客户 · 云帆科技', balance: 0 },
+      { id: 'cus-3', name: '模拟客户 · 青禾商贸', balance: 0 },
+      { id: 'cus-4', name: '模拟客户 · 山海电脑', balance: 0 },
+    ],
+    suppliers: [
+      { id: 'sup-1', name: '模拟供应商 · 远峰渠道', available: 12000000 },
+      { id: 'sup-2', name: '模拟供应商 · 海岳供应', available: 7000000 },
+      { id: 'sup-3', name: '模拟供应商 · 明川贸易', available: 4000000 },
+    ],
+    products: [
+      { id: 'prod-1', name: '轻薄商务本 Pro 14', category: '笔记本' },
+      { id: 'prod-2', name: '办公主机 Mini S', category: '台式机' },
+      { id: 'prod-3', name: '便携平板 Air 11', category: '平板' },
+    ],
+    inventory: [], sales: [], purchases: [], ledger: [], recognitions: [], expenses: [], taxes: {}, adjustments: [], bossOwed: 0, audit: [], lastAction: null,
+  };
+  state.accounts.forEach(account => state.ledger.push({ id: nextId(state, 'opening'), date: '2026-09-01', type: 'opening', accountId: account.id, amount: account.balance, note: '模拟期初账户余额', actionId: null }));
+  const seedSales = [
+    ['sale-9', '2026-09-20', 'cus-1', 'prod-1', 480000, 375000, 5000, 480000],
+    ['sale-10', '2026-09-25', 'cus-2', 'prod-3', 290000, 220000, 3000, 290000],
+    ['sale-1', '2026-10-02', 'cus-1', 'prod-1', 490000, 380000, 5000, 245000],
+    ['sale-2', '2026-10-03', 'cus-1', 'prod-2', 350000, 270000, 4000, 0],
+    ['sale-3', '2026-10-05', 'cus-2', 'prod-1', 520000, 390000, 6000, 520000],
+    ['sale-4', '2026-10-06', 'cus-3', 'prod-3', 280000, 210000, 3000, 147500],
+    ['sale-5', '2026-10-08', 'cus-4', 'prod-2', 360000, 275000, 4000, 180000],
+    ['sale-6', '2026-10-10', 'cus-2', 'prod-1', 510000, 385000, 5500, 0],
+    ['sale-7', '2026-10-11', 'cus-3', 'prod-3', 295000, 215000, 3500, 0],
+    ['sale-8', '2026-10-12', 'cus-4', 'prod-2', 355000, 278000, 4000, 0],
+  ];
+  seedSales.forEach(([id, date, customerId, productId, amount, cost, freight, paid], index) => {
+    const inventoryId = `seed-stock-${index + 1}`;
+    state.inventory.push({ id: inventoryId, date: '2026-09-01', sn: `DEMO-SN-${String(index + 1).padStart(4, '0')}`, productId, cost, status: 'in_stock', purchaseId: null, note: '模拟期初库存' });
+    state = applyAction(state, { type: 'sale_create', id, customerId, inventoryId, amount, freight, date, note: '模拟销售单' });
+    if (paid) state = applyAction(state, { type: 'receipt', customerId, amount: paid, accountId: index % 2 ? 'acc-card-1' : 'acc-corp-1', date, note: '模拟客户回款' });
+  });
+  state = applyAction(state, { type: 'receipt', customerId: 'cus-4', amount: 615000, accountId: 'acc-card-2', date: '2026-10-13', note: '结清货款，余款 800 元留作客户余额' });
+  [380000, 382000, 272000, 215000].forEach((cost, index) => state.inventory.push({ id: `seed-available-${index + 1}`, date: '2026-10-01', sn: `DEMO-READY-${String(index + 1).padStart(3, '0')}`, productId: index < 2 ? 'prod-1' : index === 2 ? 'prod-2' : 'prod-3', cost, status: 'in_stock', purchaseId: null, note: '模拟可售库存' }));
+  state = applyAction(state, { type: 'purchase_lock', id: 'pur-1', supplierId: 'sup-1', productId: 'prod-1', qty: 10, unitPrice: 380000, date: '2026-10-12', note: '锁价待发货' });
+  state = applyAction(state, { type: 'purchase_lock', id: 'pur-2', supplierId: 'sup-2', productId: 'prod-2', qty: 6, unitPrice: 270000, date: '2026-10-10', note: '模拟在途采购' });
+  state = applyAction(state, { type: 'purchase_ship', purchaseId: 'pur-2', date: '2026-10-13' });
+  state = applyAction(state, { type: 'purchase_lock', id: 'pur-3', supplierId: 'sup-3', productId: 'prod-3', qty: 3, unitPrice: 205000, date: '2026-10-01', note: '模拟已到货采购' });
+  state = applyAction(state, { type: 'purchase_ship', purchaseId: 'pur-3', date: '2026-10-02' });
+  state = applyAction(state, { type: 'purchase_receive', purchaseId: 'pur-3', date: '2026-10-04', freight: 1800, sns: ['DEMO-RECV-001', 'DEMO-RECV-002', 'DEMO-RECV-003'] });
+  state = applyAction(state, { type: 'boss_in', amount: 500000, accountId: 'acc-corp-2', date: '2026-10-03', note: '模拟老板周转垫资' });
+  state = applyAction(state, { type: 'boss_pay', amount: 86000, category: '办公费用', date: '2026-10-08', note: '老板直接代付办公耗材' });
+  state = applyAction(state, { type: 'boss_repay', amount: 100000, accountId: 'acc-corp-2', date: '2026-10-14', note: '归还部分老板垫资' });
+  state = applyAction(state, { type: 'expense', amount: 180000, accountId: 'acc-corp-1', category: '仓储费用', date: '2026-10-06' });
+  state = applyAction(state, { type: 'expense', amount: 68000, accountId: 'acc-card-3', category: '交通费用', date: '2026-10-09' });
+  state = applyAction(state, { type: 'expense', amount: 42000, accountId: 'acc-card-4', category: '办公费用', date: '2026-10-12' });
+  state = applyAction(state, { type: 'tax', month: '2026-10', amount: 125000, date: '2026-10-15', note: '模拟本月手填税费' });
+  state.lastAction = null;
+  return state;
+}
+
+
+const KEY='supply-finance-prototype-v1';
+let state;
+try { state=JSON.parse(localStorage.getItem(KEY))?.state; } catch {}
+if(!state?.accounts||!state?.sales) state=createInitialState();
+state.invoices ||= []; state.closedMonths ||= ['2026-09'];
+const ui={month:'2026-10',role:'财务',page:'overview',customer:'',account:'',search:''};
+const names={overview:'经营概览',accounts:'账户流水',purchases:'上游与采购',sales:'客户与销售',inventory:'库存与串号',expenses:'费用与票据',profit:'利润报表',imports:'导入与设置'};
+const paths={overview:'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',accounts:'M3 7h18v13H3z M3 7l2-4h14l2 4 M3 11h18 M15 15h3',purchases:'M3 9l9-6 9 6v12H3z M9 21v-8h6v8',sales:'M4 5h16v15H4z M8 3v4 M16 3v4 M8 11h8 M8 15h5',inventory:'M3 7l9-4 9 4-9 4z M3 7v10l9 4 9-4V7 M12 11v10',expenses:'M6 3h12v18l-3-2-3 2-3-2-3 2z M9 8h6 M9 12h6',profit:'M4 20V4 M4 20h17 M8 16v-4 M13 16V8 M18 16V5',imports:'M4 8V4h16v4 M12 3v11 M8 10l4 4 4-4 M4 14v6h16v-6',plus:'M12 5v14 M5 12h14',arrow:'M5 12h14 M14 7l5 5-5 5',bank:'M3 9l9-6 9 6z M5 10v8 M10 10v8 M15 10v8 M19 10v8 M3 21h18',check:'M5 12l4 4L19 6',search:'M16 16l5 5 M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0'};
+const icon=(n)=>`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[n]||paths.overview}"/></svg>`;
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cash=n=>`¥${money(n)}`;
+const get=(key,id)=>state[key]?.find(x=>x.id===id);
+const name=(key,id)=>esc(get(key,id)?.name||id||'—');
+const byDate=(a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id,undefined,{numeric:true});
+const inMonth=r=>r.date?.startsWith(ui.month);
+const btn=(text,action,kind='secondary',id='')=>`<button class="button ${kind}" data-action="${action}" data-id="${esc(id)}">${esc(text)}</button>`;
+const pill=(text,kind='neutral')=>`<span class="pill ${kind}">${esc(text)}</span>`;
+const table=(headers,rows,empty='暂无记录')=>`<div class="table-wrap"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.length?rows.join(''):`<tr><td colspan="${headers.length}"><div class="empty-state">${esc(empty)}</div></td></tr>`}</tbody></table></div>`;
+const panel=(title,body,action='',sub='')=>`<section class="panel"><div class="panel-head"><div><h2>${title}</h2>${sub?`<div class="panel-subtitle">${sub}</div>`:''}</div>${action}</div>${body}</section>`;
+const amount=n=>`<span class="amount ${n<0?'negative':''}">${cash(n)}</span>`;
+const pageHead=(eyebrow,title,sub,actions='')=>`<div class="page-head"><div><div class="eyebrow">${eyebrow}</div><h1>${title}</h1><p class="page-subtitle">${sub}</p></div><div class="page-actions">${actions}</div></div>`;
+const kpi=(label,value,meta,page,accent=false)=>`<div class="kpi-card ${accent?'accent':''}" role="button" tabindex="0" data-go="${page}"><div class="kpi-label">${label}${icon(page)}</div><div class="kpi-value"><small>¥</small>${money(value)}</div><div class="kpi-meta">${meta}</div></div>`;
+const accountOptions=(selected='')=>state.accounts.map(a=>`<option value="${a.id}" ${a.id===selected?'selected':''}>${esc(a.name)} · ${cash(a.balance)}</option>`).join('');
+const entityOptions=(key,selected='')=>state[key].map(x=>`<option value="${x.id}" ${selected===x.id?'selected':''}>${esc(x.name)}</option>`).join('');
+const statusSale=s=>s.returned?pill('已退货','neutral'):s.paid>=s.amount?pill('已收齐','success'):s.paid?pill('部分回款','warning'):pill('待收款','info');
+const statusPurchase=p=>pill({locked:'已锁货 · 待发',shipped:'已发货 · 在途',received:'已入库'}[p.status],{locked:'warning',shipped:'info',received:'success'}[p.status]);
+const typeNames={opening:'期初余额',receipt:'客户回款',transfer_in:'内部转入',transfer_out:'内部转出',boss_in:'老板垫资',boss_repay:'归还老板',expense:'经营支出',supplier_pay:'上游预付款',boss_pay:'老板代付',tax:'月度税费',freight_adjust:'运费补差',purchase_lock:'采购锁货',purchase_ship:'上游发货',purchase_receive:'采购入库',sale_return:'客户退货',sale_create:'销售出库',invoice:'发票登记',close_month:'月份关账',reopen_month:'反关账'};
+const ledgerRows=rows=>rows.map(r=>`<tr><td>${esc(r.date)}<span class="muted">${esc(r.id)}</span></td><td>${name('accounts',r.accountId)}</td><td>${pill(typeNames[r.type]||r.type)}</td><td class="right ${r.amount>=0?'positive':'negative'}">${r.amount>0?'+':''}${cash(r.amount)}</td><td>${esc(r.note)}</td></tr>`);
+function save(){try{localStorage.setItem(KEY,JSON.stringify({version:1,state}));return true;}catch{toast('浏览器无法保存，当前操作仅保留在本次打开期间');return false;}}
+let toastTimer;function toast(message){const t=document.querySelector('#toast');t.textContent=message;t.classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('visible'),3500);}
+function go(page){location.hash=page;ui.search='';ui.customer='';ui.account='';closeMenu();if(ui.page===page)render();}
+function closeMenu(){document.querySelector('#sidebar').classList.remove('open');document.querySelector('#overlay').classList.remove('visible');}
+function cashChart(){const days=Array.from({length:7},(_,i)=>`${ui.month}-${String(i+9).padStart(2,'0')}`);const values=days.map(d=>{const rs=state.ledger.filter(r=>r.date===d&&!r.type.startsWith('transfer')&&r.type!=='opening');return {in:rs.reduce((s,r)=>s+Math.max(0,r.amount),0),out:rs.reduce((s,r)=>s+Math.max(0,-r.amount),0)};});const max=Math.max(1,...values.flatMap(v=>[v.in,v.out]));return `<div class="compact-chart">${values.map((v,i)=>`<div class="bar-day" title="${days[i]}：流入 ${cash(v.in)}，流出 ${cash(v.out)}"><div class="bar-pair"><i style="height:${Math.max(2,v.in/max*100)}%"></i><i class="out" style="height:${Math.max(2,v.out/max*100)}%"></i></div><span>${days[i].slice(5).replace('-','/')}</span></div>`).join('')}</div><div class="data-note" style="padding:10px 20px 16px">不含期初余额及内部转账</div>`;}
+function profitBreakdown(s){return `<div class="panel-body"><div class="formula-row"><span>回款及余额抵扣确认</span><strong>${cash(s.salesProfit)}</strong></div><div class="formula-row"><span>退货利润冲回</span><strong>− ${cash(s.returnReversal)}</strong></div><div class="formula-row"><span>本月已付经营费用</span><strong>− ${cash(s.expenses)}</strong></div><div class="formula-row"><span>手工登记税费</span><strong>− ${cash(s.tax)}</strong></div><div class="formula-row"><span>运费及其他调整</span><strong>− ${cash(s.adjustments)}</strong></div><div class="formula-total"><span>公司利润</span>${amount(s.profit)}</div></div>`;}
+function overview(){const s=summary(state,ui.month);const recent=[...state.ledger].filter(inMonth).sort(byDate).slice(0,5);const ps=state.purchases.filter(p=>p.status!=='received');return pageHead('WORKSPACE / OVERVIEW','经营概览',`${ui.month.replace('-',' 年 ')} 月 · 资金余额为当前余额，利润按所选月份统计`,btn('登记付款','expense')+btn('＋ 登记回款','receipt','primary'))+
+`<div class="kpi-grid">${kpi('账户总余额',s.totalCash,'2 个对公账户 · 4 个业务账户','accounts')}${kpi('本月公司利润',s.profit,'按回款确认，已扣费用及税费','profit',true)}${kpi('客户待收款',s.receivables,'客户欠款与可用余额分别展示','sales')}${kpi('上游可用余额',s.supplierAvailable,'锁货扣减，入库不重复扣款','purchases')}</div><div class="summary-strip"><button data-go="inventory">库存金额 <strong>${cash(s.inventoryValue)}</strong></button><button data-go="purchases">在途货品 <strong>${s.inTransitQty} 台</strong></button><button data-go="accounts">公司欠老板 <strong>${cash(s.bossOwed)}</strong></button><button data-go="sales">客户可用余额 <strong>${cash(s.customerCredit)}</strong></button></div>
+<div class="dashboard-grid"><div class="dashboard-main">${panel('资金分布',`<div class="account-list">${state.accounts.map(a=>`<div class="account-row"><div class="account-icon ${a.type==='corporate'?'business':'personal'}">${icon(a.type==='corporate'?'bank':'accounts')}</div><div class="account-info"><strong>${esc(a.name)}</strong><small>${a.type==='corporate'?'对公账户':'业务专用账户'}</small></div><div class="account-amount">${cash(a.balance)}</div><button class="text-button" data-action="accountDetail" data-id="${a.id}">明细 →</button></div>`).join('')}</div>`,btn('账户互转','transfer','ghost small'))}${panel('最近资金流水',table(['日期 / 单号','账户','类型','金额','备注'],ledgerRows(recent)),`<button class="text-button" data-go="accounts">全部流水 →</button>`)}</div><div class="dashboard-rail"><section class="panel"><div class="profit-head"><div class="small-label">本月利润 · ${ui.month}</div><div class="big-number">${cash(s.profit)}</div><p class="data-note">每笔数字，都能追溯到业务</p></div>${profitBreakdown(s)}<div style="padding:0 20px 20px">${btn('查看利润明细 →','profitDetail','secondary full-width')}</div></section>${panel('近 7 日账户收付',cashChart(),'<div class="chart-key"><span><i></i>流入</span><span><i class="out"></i>流出</span></div>')}${panel('待处理',`<div>${[{n:ps.filter(p=>p.status==='shipped').length,t:'在途采购待入库',d:'到货时直接填写运费',go:'purchases'},{n:state.sales.filter(x=>!x.returned&&x.paid<x.amount).length,t:'销售待回款',d:'登记总额，系统自动抵扣',go:'sales'}].map(x=>`<button class="list-row button-row" data-go="${x.go}"><span class="task-count">${x.n}</span><span class="task-text"><strong>${x.t}</strong><small>${x.d}</small></span>${icon('arrow')}</button>`).join('')}</div>`)}</div></div>`;}
+function accounts(){const s=summary(state,ui.month);let rows=state.ledger.filter(inMonth).filter(r=>!ui.account||r.accountId===ui.account).filter(r=>`${r.note} ${r.id} ${get('accounts',r.accountId)?.name}`.includes(ui.search)).sort(byDate);return pageHead('MONEY / ACCOUNTS','账户流水','6 个账户统一管理；内部转账与老板垫款分开记录',btn('老板往来','bossMenu')+btn('账户互转','transfer')+btn('＋ 登记回款','receipt','primary'))+`<div class="kpi-grid">${kpi('全部账户',s.totalCash,'当前账面余额','accounts')}${kpi('对公账户',state.accounts.filter(a=>a.type==='corporate').reduce((n,a)=>n+a.balance,0),'2 个账户','accounts')}${kpi('业务卡',state.accounts.filter(a=>a.type!=='corporate').reduce((n,a)=>n+a.balance,0),'4 个账户','accounts')}${kpi('公司欠老板',s.bossOwed,'垫入 + 代付 − 已归还','accounts')}</div>`+panel('收付款明细',`<div class="table-toolbar"><input class="search-input" id="search" aria-label="搜索流水" placeholder="搜索备注、账户或单号" value="${esc(ui.search)}"><select class="account-select" id="accountFilter" aria-label="筛选账户"><option value="">全部账户</option>${accountOptions(ui.account)}</select>${btn('登记费用','expense','small secondary')}${btn('上游打款','supplier_pay','small secondary')}</div>${table(['日期 / 单号','账户','业务类型','金额','备注'],ledgerRows(rows))}`,pill(`${rows.length} 条`));}
+function purchases(){const s=summary(state,ui.month);return pageHead('PURCHASE / SUPPLIERS','上游与采购','从打款、锁货到入库，核对钱与货的每一步',btn('向上游打款','supplier_pay')+btn('＋ 登记锁货','purchase_lock','primary'))+`<div class="three-column">${state.suppliers.map(p=>`<div class="panel panel-body"><div class="row between"><strong>${esc(p.name)}</strong>${pill('预付供应商','info')}</div><div class="submetric">当前可用余额</div><div class="big-number" style="margin:10px 0">${cash(p.available)}</div><button class="text-button" data-action="supplier_pay" data-id="${p.id}">登记打款 →</button></div>`).join('')}</div><div style="height:20px"></div>`+panel('采购履约',table(['采购单 / 锁货日期','供应商 / 商品','数量','采购金额','履约状态','操作'],state.purchases.map(p=>`<tr><td><strong>${esc(p.id)}</strong><span class="muted">${p.lockedDate}</span></td><td>${name('suppliers',p.supplierId)}<span class="muted">${name('products',p.productId)}</span></td><td>${p.qty} 台</td><td class="right">${amount(p.qty*p.unitPrice)}</td><td>${statusPurchase(p)}${p.shippedDate?`<span class="muted">${p.shippedDate} 发出${p.receivedDate?' · '+p.receivedDate+' 到货':''}</span>`:''}</td><td><div class="table-actions">${p.status==='locked'?`<button data-action="purchase_ship" data-id="${p.id}">确认发货</button>`:p.status==='shipped'?`<button data-action="purchase_receive" data-id="${p.id}">确认入库</button>`:`<button data-action="purchaseDetail" data-id="${p.id}">入库详情</button>`}</div></td></tr>`)),pill(`在途 ${s.inTransitQty} 台`))+`<div class="notice" style="margin-top:18px">锁货时扣减上游可用余额；到货只更新库存和成本。进货运费在入库页面填写，无须另记一单。</div>`;}
+function sales(){const rows=state.sales.filter(s=>!ui.customer||s.customerId===ui.customer).filter(s=>`${s.id} ${s.sn} ${get('products',s.productId)?.name}`.includes(ui.search)).sort(byDate);return pageHead('SALES / CUSTOMERS','客户与销售','客户看总欠款，系统按销售日期自动分配回款',btn('登记销售','sale_create')+btn('＋ 登记回款','receipt','primary',ui.customer))+`<div class="customer-cards">${state.customers.map(c=>`<button class="customer-card ${ui.customer===c.id?'selected':''}" data-action="customerFilter" data-id="${c.id}"><div class="row between"><strong>${esc(c.name)}</strong>${pill(c.balance<0?'客户余额':'应收',''+(c.balance<0?'success':'neutral'))}</div><span class="amount">${cash(Math.abs(c.balance))}</span><small class="muted">${c.balance<0?'后续拿货可直接抵扣':'账期 '+(c.termDays||3)+' 天 · 按总额核对'}</small></button>`).join('')}</div>`+panel(ui.customer?`${name('customers',ui.customer)} · 销售账单`:'全部销售',`<div class="table-toolbar"><input id="search" class="search-input" aria-label="搜索销售" placeholder="搜索商品、串号或单号" value="${esc(ui.search)}">${ui.customer?btn('查看全部客户','clearCustomer','ghost small'):''}<span class="data-note">包括历史未结销售，金额以当前状态为准</span></div>${table(['日期 / 销售单','客户 / 商品','销售金额','已收 / 已抵扣','回款状态','操作'],rows.map(s=>`<tr><td>${s.date}<span class="muted">${esc(s.id)}</span></td><td>${name('customers',s.customerId)}<span class="muted">${name('products',s.productId)} · ${esc(s.sn)}</span></td><td class="right">${amount(s.amount)}</td><td class="right">${cash(s.paid)}<div class="progress-track"><div class="progress-fill" style="width:${Math.min(100,s.paid/s.amount*100)}%"></div></div></td><td>${statusSale(s)}</td><td><div class="table-actions"><button data-action="saleDetail" data-id="${s.id}">明细</button>${!s.returned?`<button data-action="sale_return" data-id="${s.id}">退货</button>`:''}</div></td></tr>`))}`,pill(`${rows.length} 单`));}
+function inventory(){const rows=state.inventory.filter(i=>`${i.sn} ${get('products',i.productId)?.name}`.includes(ui.search));const s=summary(state,ui.month);return pageHead('STOCK / SERIAL NUMBERS','库存与串号','每台相机对应实际采购成本，进货运费随入库分摊',btn('查看在途采购','toPurchases'))+`<div class="summary-strip"><span>在库数量 <strong>${s.inventoryQty} 台</strong></span><span>在库成本 <strong>${cash(s.inventoryValue)}</strong></span><span>在途 <strong>${s.inTransitQty} 台</strong></span><span>当前示例均为串号商品</span></div>`+panel('单台商品档案',`<div class="table-toolbar"><input id="search" class="search-input" aria-label="搜索串号" placeholder="输入串号或商品名称" value="${esc(ui.search)}"><span class="data-note">DEMO 开头均为虚构串号</span></div>${table(['商品','唯一串号','入库日期','单台到货成本','状态','操作'],rows.map(i=>`<tr><td>${name('products',i.productId)}</td><td class="sn-code">${esc(i.sn)}</td><td>${esc(i.date||'期初')}</td><td class="right">${amount(i.cost)}</td><td>${pill(i.status==='in_stock'?'在库':'已售',i.status==='in_stock'?'success':'neutral')}</td><td><button class="text-button" data-action="serialDetail" data-id="${i.id}">查看轨迹 →</button></td></tr>`))}`);}
+function expenses(){const s=summary(state,ui.month);return pageHead('EXPENSES / INVOICES','费用与票据','日常费用按支付月份计入；发票登记与月度税费分别记录',btn('登记发票','invoice')+btn('填写月度税费','tax')+btn('＋ 登记费用','expense','primary'))+`<div class="three-column"><div class="panel panel-body"><div class="small-label">本月已付公司费用</div><div class="big-number" style="margin-top:10px">${cash(s.expenses)}</div><div class="submetric">不重复包含已进入商品成本的运费</div></div><div class="panel panel-body"><div class="row between"><span class="small-label">本月手工税费</span>${state.taxes[ui.month]===undefined?pill('待填写','warning'):pill('已登记','success')}</div><div class="big-number" style="margin-top:10px">${cash(s.tax)}</div><div class="submetric">登记后扣减所选月份利润</div></div><div class="panel panel-body"><div class="small-label">本月运费及其他调整</div><div class="big-number" style="margin-top:10px">${cash(s.adjustments)}</div><button class="text-button" data-action="freight_adjust" style="margin-top:10px">核对运费补差 →</button></div></div><div style="height:20px"></div>`+panel('公司费用明细',table(['付款日期','费用类别','支付来源','金额','说明'],state.expenses.filter(inMonth).sort(byDate).map(e=>`<tr><td>${e.date}</td><td>${esc(e.category)}</td><td>${e.source==='boss'?pill('老板直接代付','info'):name('accounts',e.accountId)}</td><td class="right">${amount(e.amount)}</td><td>${esc(e.note||'—')}</td></tr>`)))+`<div style="height:20px"></div>`+panel('发票明细',table(['发票日期 / 号码','业务方向','交易对方','不含税金额','税额','价税合计'],state.invoices.filter(inMonth).sort(byDate).map(i=>`<tr><td>${i.date}<span class="muted">${esc(i.number)}</span></td><td>${esc(i.direction)}</td><td>${esc(i.partner)}</td><td class="right">${cash(i.base)}</td><td class="right">${cash(i.tax)}</td><td class="right">${cash(i.base+i.tax)}</td></tr>`)),'','登记实际发票不会自动计算或重复扣减月度税费');}
+function profit(){const s=summary(state,ui.month);const rs=state.recognitions.filter(inMonth).sort(byDate);return pageHead('REPORTS / PROFIT','利润报表',`${ui.month} · 回款及余额抵扣确认销售利润，退货和补差单列`,btn('运费补差','freight_adjust')+btn('填写本月税费','tax','primary'))+`<div class="kpi-grid">${kpi('已确认销售利润',s.salesProfit,'整单毛利 × 本次款项覆盖比例','profit')}${kpi('本月公司费用',s.expenses,'按实际付款月份计入','expenses')}${kpi('本月手工税费',s.tax,state.taxes[ui.month]===undefined?'尚未填写，结果待完善':'仅扣一次，不自动算税','expenses')}${kpi('本月公司利润',s.profit,'含退货冲回及运费调整','profit',true)}</div><div class="dashboard-grid"><div class="dashboard-main">${panel('销售利润确认明细',table(['确认日期','销售单 / 客户','本次款项覆盖','本次确认利润'],rs.map(r=>{const sale=get('sales',r.saleId);return `<tr><td>${r.date}</td><td><button class="text-button" data-action="saleDetail" data-id="${r.saleId}">${esc(r.saleId)}</button><span class="muted">${name('customers',sale?.customerId)}</span></td><td class="right">${cash(r.amount)}</td><td class="right ${r.profit>=0?'positive':'negative'}">${cash(r.profit)}</td></tr>`})),pill(`${rs.length} 条`))}${panel('当月调整',table(['日期','关联销售','调整项目','扣减金额'],state.adjustments.filter(inMonth).map(a=>`<tr><td>${a.date}</td><td>${esc(a.saleId||'—')}</td><td>${esc(a.note||a.kind)}</td><td class="right">${cash(a.amount)}</td></tr>`)),'','月结运费补差在当月调整，保留原月份报表')}</div><div class="dashboard-rail">${panel('利润从哪里来',profitBreakdown(s))}${panel('计算口径',`<div class="panel-body"><p class="invoice-note">商品销售利润 = 销售价 − 实际采购成本 − 进货运费 − 销售运费。</p><p class="invoice-note">回款按销售日期从早到晚分配；部分回款按覆盖比例确认。客户余额抵扣使用新货成本，不增加银行回款。</p><p class="invoice-note">老板垫资、还本金、内部转账不直接计入利润。当前是演示账，尚未接入正式数据。</p></div>`)}</div></div>`;}
+function imports(){return pageHead('DATA / WORKSPACE','导入与设置','统一导入入口，先核对再入账',btn('导出演示数据','export')+btn('重置演示','reset','secondary'))+`<div class="two-column">${panel('博远数据导入',`<div class="panel-body"><div class="drop-zone">${icon('imports')}<h3>一次核对四类业务资料</h3><p>购销日报提供交易明细，串号表补齐单台关联</p>${btn('体验模拟导入预检','importPreview','primary')}<p class="data-note">本原型不读取或导入真实 Excel 文件</p></div>${['采购日报','销售／退货日报','入库串号查询','批量串号跟踪'].map((n,i)=>`<div class="import-file"><span class="file-icon">${icon('expenses')}</span><div><strong>${n}</strong><small>${['数量、单价、供应商及来源单号','客户、销售金额、销售／退货方向','串号、采购单及采购成本','串号、销售单及商品状态'][i]}</small></div>${pill('Excel','neutral')}</div>`).join('')}</div>`)}<div class="stack">${panel('账期与权限',`<div class="panel-body"><div class="settings-row"><div><strong>${ui.month} ${state.closedMonths.includes(ui.month)?'已关账':'未关账'}</strong><small>财务可更正未关账月份，已关账月份由老板处理</small></div>${btn(state.closedMonths.includes(ui.month)?'反关账':'关账','toggleClose','secondary small')}</div><div class="settings-row"><div><strong>当前演示视角：${ui.role}</strong><small>切换用于查看操作差异，不是正式权限系统</small></div>${btn('切换视角','switchRole','ghost small')}</div></div>`)}${panel('原型说明',`<div class="panel-body"><p class="invoice-note">全部记录均为模拟数据，操作只保存在当前浏览器。不同设备不会同步。</p><p class="invoice-note">已可体验回款、内部转账、老板垫款、上游打款与锁货、发货入库、销售退货、月度税费和发票登记。</p><p class="invoice-note">正式 Excel 导入、服务端权限、备份恢复、配件平均成本及低频质量退供尚未接入。涉及后来收款或退货的倒序补录暂不支持，系统会提示后拒绝保存。涉及后来收款或退货的倒序补录暂不支持，系统会提示后拒绝保存。</p></div>`)}</div></div><div style="height:20px"></div>`+panel('最近操作记录',table(['业务日期','操作类型','说明'],[...state.audit].slice(-12).reverse().map(a=>`<tr><td>${esc(a.date)}</td><td>${esc(typeNames[a.type]||a.type)}</td><td>${esc(a.note||'演示业务操作')}<span class="muted">${esc(a.id)}</span></td></tr>`)));}
+
+function render(){ui.page=Object.hasOwn(names,location.hash.slice(1))?location.hash.slice(1):'overview';document.querySelector('#nav').innerHTML=Object.entries(names).map(([p,n])=>`<a class="nav-item ${ui.page===p?'active':''}" href="#${p}" ${ui.page===p?'aria-current="page"':''}>${icon(p)}<span>${n}</span>${p==='purchases'?`<span class="nav-badge">${state.purchases.filter(x=>x.status!=='received').length}</span>`:''}</a>`).join('');document.querySelector('#crumb').textContent=names[ui.page];document.querySelector('#roleName').textContent=ui.role+'视角';document.querySelector('#main').innerHTML=({overview,accounts,purchases,sales,inventory,expenses,profit,imports}[ui.page])();}
+
+const field=(label,name,content,full=false,hint='')=>`<div class="field ${full?'full':''}"><label for="f-${name}">${label}</label>${content}${hint?`<small>${hint}</small>`:''}</div>`;
+const input=(name,type='text',value='',extra='')=>`<input id="f-${name}" name="${name}" type="${type}" value="${esc(value)}" ${extra}>`;
+const select=(name,options)=>`<select id="f-${name}" name="${name}">${options}</select>`;
+const moneyField=(label='金额',name='amount',value='',zero=false)=>field(label+'（元）',name,input(name,'number',value,`required min="${zero?0:0.01}" step="0.01" inputmode="decimal"`));
+const dateField=()=>field('业务日期','date',input('date','date','2026-10-15','required'));
+const accountField=(label='收付款账户',selected='')=>field(label,'accountId',select('accountId',accountOptions(selected)));
+const noteField=()=>field('备注','note',input('note','text','','maxlength="120" placeholder="可选，便于后续核对"'),true);
+const customerField=(id='')=>field('客户','customerId',select('customerId',entityOptions('customers',id)));
+const supplierField=(id='')=>field('供应商','supplierId',select('supplierId',entityOptions('suppliers',id)));
+const categories=['工资','房租','办公费用','人情往来','资金使用成本','其他日常支出'];
+const categoryField=()=>field('费用类别','category',select('category',categories.map(x=>`<option>${x}</option>`).join('')));
+const modal=document.querySelector('#modal');let modalAction='',modalId='';
+function dialog(title,body,foot='',subtitle=''){modal.innerHTML=`<div class="modal-head"><div><h2 id="modalTitle">${title}</h2>${subtitle?`<p class="muted">${subtitle}</p>`:''}</div><button class="close-modal" aria-label="关闭弹窗" data-action="close">×</button></div><div class="modal-body">${body}</div>${foot?`<div class="modal-foot">${foot}</div>`:''}`;if(!modal.open)modal.showModal();}
+function formDialog(type,id=''){modalAction=type;modalId=id;let title='',sub='',fields='';const date=dateField(),amt=moneyField();
+  switch(type){
+    case 'receipt':title='登记客户回款';sub='只填总金额，系统自动从最早销售开始抵扣';fields=customerField(id)+accountField('实际收款账户')+amt+date;break;
+    case 'transfer':title='账户内部转账';sub='账户总资金不变，不计利润，也不增加老板垫款';fields=field('转出账户','fromId',select('fromId',accountOptions()))+field('转入账户','toId',select('toId',accountOptions('acc-corp-2')))+amt+date;break;
+    case 'boss_in':title='老板从外部垫入';sub='增加公司账户余额及欠老板本金';fields=accountField('实际收款账户')+amt+date;break;
+    case 'boss_pay':title='老板直接代付公司费用';sub='不生成公司银行流水，增加欠老板金额并登记费用';fields=categoryField()+amt+date;break;
+    case 'boss_repay':title='归还老板垫款';sub=`当前公司欠老板 ${cash(state.bossOwed)}；归还本金不重复扣利润`;fields=accountField('实际付款账户')+amt+date;break;
+    case 'supplier_pay':title='向上游预付货款';sub='付款减少银行余额，增加上游可用余额';fields=supplierField(id)+accountField('实际付款账户')+amt+date;break;
+    case 'expense':title='登记公司日常费用';sub='按实际付款月份扣减，不再登记已计入商品成本的运费';fields=categoryField()+accountField('实际付款账户')+amt+date;break;
+    case 'tax':title='填写月度税费';sub='手工填写，扣减所选月份利润；保存此项不会生成银行付款';fields=field('归属月份','month',input('month','month',ui.month,'required'))+moneyField('税费','amount',(state.taxes[ui.month]||0)/100,true);break;
+    case 'freight_adjust':title='快递月结补差';sub='此演示支持已收齐销售的追加运费，调整当月利润并保留原月报表';fields=field('原销售单','saleId',select('saleId',state.sales.filter(s=>s.paid>=s.amount&&!s.returned).map(s=>`<option value="${s.id}">${s.id} · ${s.date} · ${name('customers',s.customerId)}</option>`).join('')))+moneyField('追加运费','amount','2')+date;break;
+    case 'purchase_lock':title='登记上游锁货';sub='按锁货金额扣减上游可用余额，后续收货不再扣一次';fields=supplierField()+field('商品','productId',select('productId',entityOptions('products')))+field('数量（台）','qty',input('qty','number','10','required min="1" max="1000" step="1"'))+moneyField('约定单价','unitPrice','3250')+date;break;
+    case 'purchase_ship':{const p=get('purchases',id);title='确认上游已发货';sub=`${p.id} · ${name('products',p.productId)} · ${p.qty} 台`;fields=date;break;}
+    case 'purchase_receive':{const p=get('purchases',id);title='确认采购入库';sub=`${p.id} · ${name('products',p.productId)} · ${p.qty} 台`;fields=date+moneyField('整批进货运费','freight','38',true)+field(`商品串号（需要 ${p.qty} 个）`,'sns',`<textarea id="f-sns" name="sns" required placeholder="每行一个串号"></textarea><button type="button" class="text-button" data-action="sampleSN" style="margin-top:8px">填入演示串号</button>`,true,'串号对应实际货品，运费按数量分摊。原型演示填写即可。');break;}
+    case 'sale_create':title='登记销售出库';sub='销售运费直接填写；客户可用余额自动抵扣，使用本台商品实际成本';fields=customerField(id)+field('在库商品','inventoryId',select('inventoryId',state.inventory.filter(i=>i.status==='in_stock').map(i=>`<option value="${i.id}">${name('products',i.productId)} · ${esc(i.sn)} · 成本 ${cash(i.cost)}</option>`).join('')))+moneyField('销售金额','amount','3300')+moneyField('销售运费','freight','12',true)+date;break;
+    case 'sale_return':{const s=get('sales',id);title='客户退货入库';sub=`${s.id} · ${name('customers',s.customerId)} · 按原售价 ${cash(s.amount)} 退货`;fields=date+`<div class="notice field full">商品回库，客户账单冲减 ${cash(s.amount)}；多出的余额留待下次拿货。已确认利润在退货月冲回，实际运费保留为损失。</div>`;break;}
+    case 'invoice':title='登记实际发票';sub='记录票面信息，不自动生成月度税费扣减';fields=field('方向','direction',select('direction','<option>采购收票</option><option>销售开票</option>'))+field('发票号码','number',input('number','text','','required maxlength="40"'))+field('交易对方','partner',input('partner','text','','required maxlength="60"'))+date+moneyField('票面不含税金额','base','',true)+moneyField('票面税额','taxAmount','',true);break;
+  }
+  if(!title)return;
+  dialog(title,`<form id="actionForm"><div class="form-grid">${fields}${noteField()}</div><div id="formPreview" class="preview-box"></div><div id="formError" class="error-message" role="alert"></div><div class="modal-foot" style="padding:20px 0 0;border:0">${btn('取消','close')}<button class="button primary" type="submit">保存到演示账</button></div></form>`,'',sub);updatePreview();
+}
+function updatePreview(){const f=document.querySelector('#actionForm');if(!f)return;const data=Object.fromEntries(new FormData(f));let text='';const v=Math.round(Number(data.amount||0)*100);if(modalAction==='receipt'){const c=get('customers',data.customerId);let remain=v;const sales=state.sales.filter(s=>s.customerId===c?.id&&!s.returned&&s.paid<s.amount&&s.date<=data.date).sort((a,b)=>a.date.localeCompare(b.date)||a.id.localeCompare(b.id,undefined,{numeric:true}));let rows=[],profit=0;for(const s of sales){const a=Math.min(remain,s.amount-s.paid);if(a<=0)break;profit+=Math.round((s.amount-s.cost-s.originalFreight)*(s.paid+a)/s.amount)-s.recognizedProfit;rows.push(`<div class="preview-row"><span>${s.date} · ${s.id}</span><strong>${cash(a)}</strong></div>`);remain-=a;}text=`<h3>自动抵扣预览</h3><div class="allocation-preview">${rows.join('')||'<span class="muted">填写金额后显示抵扣顺序</span>'}</div><div class="preview-row"><span>本次确认商品利润</span><strong class="positive">${cash(profit)}</strong></div>${remain>0?`<div class="preview-row"><span>留作客户可用余额</span><strong>${cash(remain)}</strong></div>`:''}`;}else if(modalAction==='purchase_receive'){const p=get('purchases',modalId);const freight=Math.round(Number(data.freight||0)*100);text=`<div class="preview-row"><span>采购单价</span><strong>${cash(p.unitPrice)}</strong></div><div class="preview-row"><span>每台分摊运费（平均）</span><strong>${cash(freight/p.qty)}</strong></div><div class="preview-row"><span>每台到货成本（平均）</span><strong>${cash(p.unitPrice+freight/p.qty)}</strong></div><small class="muted">入库不会再次扣减上游可用余额，尾差保留到分。</small>`;}else if(modalAction==='sale_create'){const i=get('inventory',data.inventoryId);const c=get('customers',data.customerId);text=`<div class="preview-row"><span>本台商品到货成本</span><strong>${cash(i?.cost||0)}</strong></div><div class="preview-row"><span>整单商品销售利润</span><strong>${cash(v-(i?.cost||0)-Math.round(Number(data.freight||0)*100))}</strong></div><div class="preview-row"><span>客户已有余额可覆盖</span><strong>${cash(Math.min(v,Math.max(0,-(c?.balance||0))))}</strong></div>`;}else if(modalAction==='purchase_lock'){const total=Math.round(Number(data.unitPrice||0)*100)*Number(data.qty||0);text=`<div class="preview-row"><span>本次锁货扣减</span><strong>${cash(total)}</strong></div><div class="preview-row"><span>锁货后上游可用</span><strong>${cash((get('suppliers',data.supplierId)?.available||0)-total)}</strong></div>`;}else if(modalAction==='invoice'){text=`<div class="preview-row"><span>价税合计</span><strong>${cash(Math.round((Number(data.base||0)+Number(data.taxAmount||0))*100))}</strong></div><small class="muted">按实际票面填写；月度税费另行手录。</small>`;}else if(modalAction==='tax'){text=`<div class="preview-row"><span>${esc(data.month)} 利润扣减</span><strong>${cash(v)}</strong></div><small class="muted">更新已有税费金额，不重复叠加；不改变银行余额。</small>`;}else if(modalAction==='transfer'){text='<div class="preview-row"><span>账户总资金变动</span><strong>¥0.00</strong></div><div class="preview-row"><span>公司欠老板及利润变动</span><strong>¥0.00</strong></div>';}else{text='<span class="muted">保存后将同步更新相关余额及明细。所有操作仅使用演示数据。</span>';}if(modalAction==='receipt'&&v>0&&data.date){try{applyAction(state,{type:'receipt',customerId:data.customerId,accountId:data.accountId,amount:v,date:data.date});}catch(e){text='<div class="error-message">'+esc(e.message)+'</div>';}}document.querySelector('#formPreview').innerHTML=text;}
+function submitForm(f){const data=Object.fromEntries(new FormData(f));const action={...data,type:modalAction};for(const k of ['amount','unitPrice','freight','base','taxAmount'])if(k in action)action[k]=Math.round(Number(action[k])*100);if('qty'in action)action.qty=Number(action.qty);if('sns'in action)action.sns=action.sns.split(/[\s,，;；]+/).filter(Boolean);if(modalAction.startsWith('purchase_')&&modalId)action.purchaseId=modalId;if(modalAction==='sale_return')action.saleId=modalId;
+  try{const m=action.month||action.date?.slice(0,7);if(ui.role==='财务'&&state.closedMonths.includes(m))throw new Error('该月份已关账，请切换老板演示视角处理。');if(modalAction==='invoice'){if(state.invoices.some(i=>i.number===action.number))throw new Error('该发票号码已登记');state={...state,invoices:[...state.invoices,{id:'invoice-'+Date.now(),date:action.date,number:action.number,partner:action.partner,direction:action.direction,base:action.base,tax:action.taxAmount,note:action.note}],audit:[...state.audit,{id:'invoice-audit-'+Date.now(),date:action.date,type:'invoice',note:action.number}]};}else state=applyAction(state,action);save();modal.close();render();toast('已保存，相关余额与利润已更新');}catch(e){document.querySelector('#formError').textContent=e.message;}
+}
+function saleDetail(id){const s=get('sales',id);const recs=state.recognitions.filter(r=>r.saleId===id);dialog('销售明细',`<dl class="detail-grid">${[['销售单',s.id],['客户',get('customers',s.customerId)?.name],['串号',s.sn],['销售金额',cash(s.amount)],['货品到货成本',cash(s.cost)],['初始销售运费',cash(s.originalFreight)],['已收／已抵扣',cash(s.paid)],['累计确认商品利润',cash(s.recognizedProfit)]].map(([k,v])=>`<div class="detail-item"><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>${statusSale(s)}<h3 style="font-size:14px;margin-top:22px">利润确认记录</h3>${table(['日期','覆盖金额','确认利润'],recs.map(r=>`<tr><td>${r.date}</td><td>${cash(r.amount)}</td><td>${cash(r.profit)}</td></tr>`))}`,btn('关闭','close'));}
+function serialDetail(id){const i=get('inventory',id);const sale=state.sales.filter(s=>s.sn===i.sn).sort((a,b)=>a.date.localeCompare(b.date));dialog('串号轨迹',`<div class="notice"><strong>${esc(i.sn)}</strong><br>${name('products',i.productId)} · 到货成本 ${cash(i.cost)}</div><ul class="timeline"><li><strong>采购入库</strong><small>${esc(i.date||'期初库存')} · ${esc(i.purchaseId||'期初建账')}</small></li>${sale.map(s=>`<li><strong>销售出库 · ${name('customers',s.customerId)}</strong><small>${s.date} · ${s.id} · ${cash(s.amount)}</small></li>${s.returned?`<li><strong>客户退货回仓</strong><small>${s.returnedDate} · 客户账单冲减 ${cash(s.amount)}</small></li>`:''}`).join('')}<li><strong>当前状态：${i.status==='in_stock'?'在库':'已售'}</strong></li></ul>`,btn('关闭','close'));}
+function handleAction(action,id=''){
+  if(['receipt','transfer','boss_in','boss_pay','boss_repay','expense','tax','freight_adjust','purchase_lock','purchase_ship','purchase_receive','sale_return','sale_create','supplier_pay','invoice'].includes(action)){formDialog(action,id);return;}
+  switch(action){case 'close':modal.close();break;case 'accountDetail':ui.account=id;location.hash='accounts';render();break;case 'profitDetail':go('profit');break;case 'toPurchases':go('purchases');break;case 'customerFilter':ui.customer=ui.customer===id?'':id;render();break;case 'clearCustomer':ui.customer='';render();break;case 'saleDetail':saleDetail(id);break;case 'serialDetail':serialDetail(id);break;
+  case 'purchaseDetail':{const p=get('purchases',id);dialog('采购入库详情',`<dl class="detail-grid">${[['采购单',p.id],['供应商',get('suppliers',p.supplierId)?.name],['数量',p.qty+' 台'],['采购单价',cash(p.unitPrice)],['整批进货运费',cash(p.freight)],['到货日期',p.receivedDate]].map(([k,v])=>`<div class="detail-item"><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl><p class="invoice-note">成本已分摊到本批各串号，入库没有再次扣减上游余额。</p>`,btn('查看库存','toInventory'));break;}
+  case 'toInventory':modal.close();go('inventory');break;
+  case 'sampleSN':{const p=get('purchases',modalId);document.querySelector('#f-sns').value=Array.from({length:p.qty},(_,i)=>`DEMO-${p.id.toUpperCase()}-${String(i+1).padStart(3,'0')}`).join('\n');updatePreview();break;}
+  case 'bossMenu':dialog('老板往来',`<div class="preview-box"><div class="preview-row"><span>公司当前欠老板</span><strong>${cash(state.bossOwed)}</strong></div></div><div class="stack" style="margin-top:18px">${btn('老板从外部转入公司账户','boss_in','primary full-width')}${btn('老板在外部直接代付费用','boss_pay','secondary full-width')}${btn('公司归还老板本金','boss_repay','secondary full-width')}</div><p class="invoice-note">直接代付采购货款的完整关联将在正式版本补齐；此处演示外部垫入、代付公司费用和归还本金。</p>`);break;
+  case 'importPreview':dialog('模拟导入预检',`<div class="success-box">${icon('check')} 四类文件格式检查通过（模拟结果）</div><div class="compact-summary"><span>新增明细 <strong>24</strong></span><span>重复跳过 <strong>6</strong></span><span>需要核对 <strong>1</strong></span></div>${table(['来源单号','已有数量','本次数量','处理'],['<tr><td>DEMO-PR-004</td><td>2 台</td><td>4 台</td><td><span class="pill warning">数量有变化</span></td></tr>'])}<p class="invoice-note">正式版本会展示整单差异并保留原始文件与批次；不会静默覆盖。此处仅演示预检界面，不读取真实文件，也不写入购销记录。</p>`,btn('完成预检演示','close','primary'));break;
+  case 'switchRole':ui.role=ui.role==='财务'?'老板':'财务';render();toast('已切换为'+ui.role+'演示视角');break;
+  case 'toggleClose':if(ui.role!=='老板'){toast('请切换老板演示视角处理关账');break;}const closed=state.closedMonths.includes(ui.month);state.closedMonths=closed?state.closedMonths.filter(m=>m!==ui.month):[...state.closedMonths,ui.month];state.audit.push({id:'period-'+Date.now(),date:ui.month+'-15',type:closed?'reopen_month':'close_month',note:ui.month+' 演示账期操作'});save();render();toast(closed?'本月已反关账':'本月已关账');break;
+  case 'reset':dialog('重置演示数据',`<p>将清除当前浏览器里的演示操作，恢复初始模拟数据。</p><p class="invoice-note">不会影响需求文档、真实文件或其他设备。</p>`,btn('取消','close')+btn('确认重置','resetConfirmed','danger'));break;
+  case 'resetConfirmed':state=createInitialState();state.invoices=[];state.closedMonths=['2026-09'];save();modal.close();render();toast('已恢复初始演示数据');break;
+  case 'export':{const blob=new Blob([JSON.stringify({kind:'模拟数据，不是正式账本',exportedAt:new Date().toISOString(),state},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='财务工作台-演示数据.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('已导出演示数据');break;}
+  case 'help':dialog('可以怎样体验',`<ol class="check-list"><li>在首页登记客户回款，查看自动抵扣与利润变化。</li><li>进入上游与采购，对在途单确认入库并填写运费。</li><li>在账户流水中做一次内部转账或老板垫款。</li><li>登记销售或客户退货，观察欠款、库存和利润。</li><li>填写月度税费或运费补差，核对当月利润。</li></ol><div class="notice">全部是演示数据，仅保存在当前浏览器。页面原型不具备正式账本的服务端存储与权限保障。</div>`,btn('开始体验','close','primary'));break;
+  }
+}
+document.addEventListener('click',e=>{const a=e.target.closest('[data-action]');if(a){e.preventDefault();handleAction(a.dataset.action,a.dataset.id||'');return;}const g=e.target.closest('[data-go]');if(g){go(g.dataset.go);}});
+document.addEventListener('keydown',e=>{const g=e.target.closest('[data-go][role="button"]');if(g&&(e.key==='Enter'||e.key===' ')){e.preventDefault();go(g.dataset.go);}});
+modal.addEventListener('submit',e=>{e.preventDefault();submitForm(e.target);});modal.addEventListener('input',updatePreview);modal.addEventListener('change',updatePreview);modal.addEventListener('click',e=>{if(e.target===modal){const r=modal.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)modal.close();}});
+document.addEventListener('input',e=>{if(e.target.id==='search'){const pos=e.target.selectionStart;ui.search=e.target.value;render();const el=document.querySelector('#search');el?.focus();el?.setSelectionRange(pos,pos);}});
+document.addEventListener('change',e=>{if(e.target.id==='accountFilter'){ui.account=e.target.value;render();}});
+document.querySelector('#monthPicker').addEventListener('change',e=>{if(!e.target.value)return;ui.month=e.target.value;render();});
+document.querySelector('#menuButton').addEventListener('click',()=>{document.querySelector('#sidebar').classList.add('open');document.querySelector('#overlay').classList.add('visible');});document.querySelector('#overlay').addEventListener('click',closeMenu);document.querySelector('#switchRole').addEventListener('click',()=>handleAction('switchRole'));document.querySelector('#helpButton').addEventListener('click',()=>handleAction('help'));window.addEventListener('hashchange',()=>{ui.search='';closeMenu();render();});render();
+
+</script>
+</body>
+</html>

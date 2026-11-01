@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#4659d6">
+  <meta name="description" content="龍成ERP：公司收支、往来、库存与经营利润管理。">
+  <title>龍成ERP · 3C 供应链</title>
+  <link rel="icon" href="/assets/longcheng-erp-icon.png" type="image/png"><link rel="apple-touch-icon" href="/assets/longcheng-erp-icon.png">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./app.css"><link rel="stylesheet" href="./auth.css">
+  <link rel="stylesheet" href="./workflows.css">
+  <link rel="stylesheet" href="./theme.css">
+  <link rel="stylesheet" href="./galaxy.css">
+  <script src="./appearance.js"></script>
+  <link rel="stylesheet" href="/employee-profile.css">
+</head>
+<body>
+  <div class="app-shell">
+    <button class="sidebar-overlay" id="overlay" aria-label="关闭导航"></button>
+    <aside class="sidebar" id="sidebar">
+      <a href="#overview" class="brand" aria-label="龍成ERP首页"><img class="brand-mark" src="/assets/longcheng-erp-icon.png" alt="" width="36" height="36"><span><span class="brand-name">龍成ERP</span><span class="brand-sub">3C 供应链 · 经营账</span></span></a>
+      <a class="nav-item" href="/erp.html">业务订单与收发货</a><a class="nav-item" href="/wecom-order.html">企业微信待办</a><div class="nav-section">财务与历史记录</div><nav id="nav" aria-label="主导航"></nav>
+      <div class="sidebar-bottom"><div class="sidebar-note"><span class="status-dot"></span>共享账本<small>连接服务器中</small></div><div class="sidebar-foot"><span class="avatar">财</span><div><strong id="roleName">财务视角</strong><small class="sync-status">连接账本中</small></div><button class="button ghost small" id="switchRole" title="退出登录" aria-label="退出登录">退出</button></div></div>
+    </aside>
+    <div class="workspace">
+      <header class="topbar"><div class="row"><button class="mobile-menu button ghost" id="menuButton" aria-label="打开导航">☰</button><div class="breadcrumb">工作空间 <span>/</span> <strong id="crumb">经营概览</strong></div></div><div class="topbar-actions"><label class="appearance-picker"><span class="sr-only">网页外观</span><select data-appearance-control aria-label="网页外观"><option value="system">跟随系统</option><option value="light">浅色</option><option value="dark">深色</option></select></label><span class="demo-badge">正在连接账本</span><label class="month-picker"><span>期间</span><input id="monthPicker" type="month" value="2026-10" aria-label="报表月份"></label><button class="button ghost small" id="helpButton" aria-label="使用说明">?</button></div></header>
+      <main id="main" tabindex="-1"><div class="galaxy-loading" role="status"><span class="galaxy-loader" aria-hidden="true"></span><div><strong>正在连接账本</strong><p>读取账户和经营数据，请稍候。</p></div></div></main>
+      <footer class="app-footer"><span id="workspaceNotice">数据保存在当前服务器 · 支持期初建档、对账与流水更正</span><div class="site-filing"><span>郑州原拓商贸有限公司</span><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">豫ICP备2026052814号-1</a></div></footer>
+    </div>
+  </div>
+  <dialog id="modal" class="modal" aria-labelledby="modalTitle"></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <noscript><p>龍成ERP工作台需要启用 JavaScript。</p></noscript>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

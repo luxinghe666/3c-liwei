@@ -1,0 +1,14 @@
+import { resolve } from 'node:path';
+import { createApplication } from './app.mjs';
+import {loadPushConfig,pushWorker} from './push.mjs';
+import {syncWorker} from './erp-sync.mjs';
+const pushConfig=loadPushConfig();
+const port = Number(process.env.PORT || 4318);
+const host = process.env.HOST || '127.0.0.1';
+const origin = process.env.APP_ORIGIN || `http://127.0.0.1:${port}`;
+const app = await createApplication({ database: resolve(process.env.DB_PATH || 'data/finance.sqlite'), origin, pushConfigured:Boolean(pushConfig), trustedProxyIp: process.env.TRUST_PROXY_IP || '', allowSetup: ['127.0.0.1','::1','localhost'].includes(host) && ['127.0.0.1','[::1]','localhost'].includes(new URL(origin).hostname) });
+const worker=pushWorker(app.store,pushConfig);worker.start();
+const erpWorker=syncWorker(app.store);erpWorker.start();
+app.server.listen(port,host,()=>console.log(`财务工作台测试版：${origin}\n账本：${resolve(process.env.DB_PATH || 'data/finance.sqlite')}\n首次打开请设置老板账号。此版本仍处于功能验证阶段。`));
+let closing=false;
+for(const signal of ['SIGINT','SIGTERM']) process.on(signal,async()=>{if(closing)return;closing=true;worker.stop();await erpWorker.stop();await app.close();process.exit(0);});

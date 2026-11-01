@@ -1,0 +1,11 @@
+{
+    email {$ACME_EMAIL}
+    admin off
+}
+{$FINANCE_DOMAIN} {
+    encode zstd gzip
+    reverse_proxy app:4318 {
+        # Always replace caller input with Caddy's direct TCP peer, never X-Forwarded-For.
+        header_up X-Finance-Client-IP {remote_host}
+    }
+}

@@ -1,0 +1,202 @@
+/* 原拓财务 shares the visual language of 龍成明仓.
+ * This layer only presents existing finance operations and data. */
+:root {
+  --gold: #FAC03D;
+  --gold-ink: #795000;
+  --gold-soft: #FCEBC5;
+  --gold-line: #D8AD4B;
+  --radius: 18px;
+}
+html[data-appearance="dark"] {
+  --gold-ink: #FAC03D;
+  --gold-soft: #372B18;
+  --gold-line: #9D7730;
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-appearance="light"]):not([data-appearance="dark"]) {
+    --gold-ink: #FAC03D;
+    --gold-soft: #372B18;
+    --gold-line: #9D7730;
+  }
+}
+
+/* Brand row, quiet surfaces and the small gold navigation marker. */
+.sidebar { padding: 24px 16px 18px; }
+.sidebar .brand { padding: 0 6px 24px; gap: 11px; }
+.brand-mark { flex: 0 0 44px; width: 44px; height: 44px; border-radius: 12px; overflow: hidden; box-shadow: none; }
+.brand-mark img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.brand-name { color: var(--ink); font-size: 20px; letter-spacing: .5px; }
+.brand-sub { color: var(--muted); letter-spacing: .4px; font-size: 10px; }
+.sidebar > .nav-section { color: var(--muted); margin: 0 11px 12px; font-size: 11px; letter-spacing: 1px; }
+.sidebar #nav { scrollbar-width: thin; scrollbar-color: var(--line) transparent; padding: 0 0 10px; }
+.nav-item { min-height: 44px; border-radius: 12px; font-weight: 550; }
+.nav-item .icon { width: 21px; height: 21px; stroke-width: 1.8; }
+.nav-item.active { color: var(--brand); background: var(--surface-soft); }
+.nav-item.active::before { left: 13px; bottom: 5px; width: 18px; height: 3px; border-radius: 3px; background: var(--gold); }
+.nav-item.active .nav-badge { background: var(--gold-soft); color: var(--gold-ink); }
+.sidebar-note { margin: 14px 0; border: 1px solid var(--line); border-radius: 12px; }
+.sidebar-foot { padding: 16px 0 0; }
+.avatar { color: var(--gold-ink); background: var(--gold-soft); border-color: var(--gold-line); }
+.topbar { border-bottom-color: var(--line); min-height: 72px; }
+.demo-badge { border: 1px solid var(--gold-line); border-radius: 20px; color: var(--gold-ink); background: var(--gold-soft); }
+.page-head { gap: 18px; }
+.page-head h1 { font-weight: 700; letter-spacing: 0; }
+.eyebrow { color: var(--brand); letter-spacing: 1.6px; }
+.page-subtitle { color: var(--muted); }
+.page-actions { flex-wrap: wrap; gap: 10px; }
+.button { border-radius: 11px; font-weight: 600; box-shadow: 0 1px 0 var(--line); }
+.button.primary { box-shadow: 0 2px 0 var(--brand-action-hover), 0 4px 12px rgb(70 25 18 / 8%); }
+.button.small { border-radius: 9px; }
+.button.ghost { box-shadow: none; }
+.button:focus-visible, .customer-card:focus-visible, .workspace-task-card:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 3px; }
+.pill { border-radius: 20px; padding: 4px 9px; }
+.page-tab.active { border-color: var(--gold); }
+.segmented, .filter-tab { border-radius: 11px; }
+.segmented button.active, .segmented button[aria-selected="true"], .filter-tab.active { background: var(--gold); color: #3A2611; }
+
+/* Date granularity is one compact choice group, independent of table toolbars. */
+.profit-period-switch { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; padding: 4px; margin: 0 0 18px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface-soft); }
+.profit-period-option { min-height: 40px; min-width: 90px; padding: 9px 19px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font: inherit; font-size: 13px; font-weight: 600; line-height: 1.5; transition: background .16s ease, color .16s ease, transform .16s ease; }
+.profit-period-option[aria-pressed="true"] { background: var(--gold); color: #3A2611; }
+.profit-period-option:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 3px; }
+.profit-period-option:active { transform: scale(.97); }
+@media (max-width: 600px) { .profit-period-option { min-height: 44px; } }
+@media (prefers-reduced-motion: reduce) { .profit-period-option { transition: none; } .profit-period-option:active { transform: none; } }
+
+/* The same red dragon banner as the mini program, adapted to finance. */
+.brand-welcome { position: relative; isolation: isolate; min-height: 176px; overflow: hidden; padding: 28px 32px; margin: 0 0 22px; border: 1px solid #CF4B3B; border-radius: 20px; background: linear-gradient(115deg, #A7201C, #C12C23); color: #FFF6E8; }
+.brand-welcome-copy { position: relative; z-index: 1; max-width: 75%; }
+.brand-welcome-eyebrow { font-size: 11px; letter-spacing: 2px; color: #FFF0D8; }
+.brand-welcome h2 { margin: 12px 0 8px; font-size: clamp(25px, 2.7vw, 34px); line-height: 1.4; font-weight: 700; letter-spacing: .5px; }
+.brand-welcome p { margin: 0; font-size: 14px; line-height: 1.7; color: #FFF0D8; }
+.brand-role { display: inline-block; margin-top: 16px; padding: 3px 10px; border: 1px solid rgb(250 192 61 / 55%); border-radius: 20px; color: #FFE29B; font-size: 11px; }
+.brand-welcome-dragon { position: absolute; z-index: 0; width: 280px; height: auto; right: -8px; top: -12px; opacity: .37; pointer-events: none; }
+
+/* Readable financial statistics use the mini-program's restrained card system. */
+.kpi-grid { gap: 14px; }
+.kpi-card { padding: 20px; border-radius: 17px; min-height: 142px; box-shadow: none; }
+.kpi-label { color: var(--muted); font-size: 13px; gap: 10px; }
+.kpi-label > svg { color: var(--brand); width: 20px; height: 20px; stroke-width: 1.8; }
+.kpi-value { color: var(--ink); font-weight: 700; margin-top: 16px; }
+.kpi-card.accent { border-color: var(--gold-line); background: var(--surface); }
+.kpi-card.accent::before { content: ""; position: absolute; top: 0; left: 20px; height: 3px; width: 32px; background: var(--gold); border-radius: 0 0 3px 3px; }
+.kpi-card.accent .kpi-value { color: var(--ink); }
+.kpi-card.accent .kpi-label > svg { color: var(--gold-ink); }
+.kpi-meta { font-size: 11px; color: var(--muted); line-height: 1.6; }
+.summary-strip { border-radius: 15px; background: var(--surface-soft); }
+.summary-strip > button { min-height: 30px; border-radius: 6px; }
+.summary-strip > button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 4px; }
+.summary-strip strong { color: var(--ink); }
+.panel, .customer-card { box-shadow: none; }
+.panel-head { padding: 22px 22px 17px; }
+.panel-head h2 { font-size: 16px; font-weight: 700; }
+.panel-body { padding: 18px 22px 22px; }
+.panel-head + .panel-body { padding-top: 0; }
+.panel.panel-body { padding: 22px; }
+.profit-head { border-radius: 17px 17px 0 0; background: var(--gold-soft); }
+.profit-head .small-label { color: var(--gold-ink); }
+.profit-head .big-number { color: var(--ink); }
+.profit-head .data-note { color: var(--muted); margin: 10px 0 0; }
+.formula-total > :last-child { color: var(--ink); }
+.table-wrap th { background: var(--surface-soft); color: var(--muted); font-weight: 600; }
+.table-wrap td { line-height: 1.7; }
+.table-wrap td .muted { color: var(--muted); }
+.account-row { margin: 0 22px; padding: 16px 0; gap: 12px; flex-wrap: wrap; }
+.account-icon, .account-icon.business { background: var(--surface-soft); color: var(--brand); border-color: var(--line); border-radius: 11px; }
+.account-icon.personal { color: var(--gold-ink); background: var(--gold-soft); border-color: var(--gold-line); }
+.account-info strong { font-size: 14px; }
+.account-amount { font-size: 15px; }
+.account-list { padding-bottom: 16px; }
+.task-count { color: var(--gold-ink); background: var(--gold-soft); border-radius: 50%; }
+.list-row.button-row { padding: 18px 22px; }
+.customer-card { border-radius: 16px; padding: 19px; }
+.customer-card.selected { background: var(--gold-soft); border-color: var(--gold-line); box-shadow: inset 0 0 0 1px var(--gold-line); }
+.customer-card.selected .amount { color: var(--ink); }
+.galaxy-check-card:has(input:checked) { background: var(--gold-soft); }
+.notice { border-radius: 12px; background: var(--gold-soft); color: var(--gold-ink); border-color: var(--gold-line); }
+
+/* Two-column task cards preserve the mini program's familiar entry points. */
+.workspace-shortcuts { margin: 26px 0; }
+.workspace-section-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 14px; }
+.workspace-section-head h2 { font-size: 20px; font-weight: 700; }
+.workspace-task-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.workspace-task-card { position: relative; display: flex; align-items: center; min-width: 0; min-height: 106px; padding: 22px; gap: 16px; border: 1px solid var(--line); border-radius: 17px; background: var(--surface); color: var(--ink); transition: border-color .16s, background .16s, transform .16s; }
+.workspace-task-icon { color: var(--brand); flex-shrink: 0; }
+.workspace-task-icon svg { width: 30px; height: 30px; stroke-width: 1.8; }
+.workspace-task-copy { display: grid; gap: 6px; min-width: 0; padding-right: 28px; }
+.workspace-task-copy strong { font-size: 16px; font-weight: 650; }
+.workspace-task-copy small { font-size: 12px; color: var(--muted); }
+.workspace-task-tag { position: absolute; top: 12px; right: 12px; padding: 2px 7px; border-radius: 6px; color: var(--gold-ink); background: var(--gold-soft); font-size: 10px; }
+.workspace-task-card:active { transform: translateY(1px); }
+@media (hover: hover) { .workspace-task-card:hover { border-color: var(--gold-line); background: var(--surface-soft); } }
+
+/* Login uses the same brand banner, with no decorative image behind inputs. */
+.auth-layout, .auth-shell { width: min(1080px, 100%); }
+.auth-shell { grid-template-columns: minmax(0, 1fr) minmax(320px, 420px); gap: 40px; align-items: stretch; }
+.auth-intro { position: relative; isolation: isolate; overflow: hidden; border-radius: 24px; padding: 36px; background: linear-gradient(120deg, #A7201C, #C12C23); color: #FFF6E8; min-height: 510px; }
+.auth-intro::before { content: ""; position: absolute; inset: 0; z-index: -1; background: url('./assets/yongle-dragon.png') right -90px bottom -230px / 380px auto no-repeat; opacity: .25; pointer-events: none; }
+.auth-intro .brand { margin: 0 0 68px; padding: 0; }
+.auth-intro .brand-name { color: #FFF6E8; font-size: 24px; }
+.auth-intro .eyebrow { color: #FFE29B; font-size: 11px; }
+.auth-intro h1 { font-size: clamp(28px, 3vw, 37px); margin: 16px 0; line-height: 1.65; letter-spacing: 0; font-weight: 700; }
+.auth-intro p { color: #FFF0D8; font-size: 14px; }
+.auth-intro .auth-note { color: #FFF0D8; margin-top: 38px; line-height: 1.8; }
+.auth-card { border-radius: 24px; box-shadow: none; padding: 34px; align-self: center; }
+.auth-card h2 { color: var(--ink); font-size: 27px; font-weight: 700; }
+.auth-card input, .auth-card select { border-radius: 11px; }
+.auth-card .button { min-height: 48px; }
+.auth-appearance { margin-top: 0 !important; }
+.auth-layout > .site-filing { margin-top: 28px; }
+
+@media (max-width: 1100px) { .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) {
+  .auth-layout { max-width: 460px; }
+  .auth-shell { display: block; }
+  .auth-intro { min-height: 0; padding: 26px; border-radius: 20px; }
+  .auth-intro::before { background-size: 240px auto; background-position: right -65px top -10px; }
+  .auth-intro .brand { margin-bottom: 26px; }
+  .auth-intro .brand-name { font-size: 23px; }
+  .auth-intro h1 { font-size: 27px; margin: 10px 0 0; }
+  .auth-intro p, .auth-intro .auth-note { display: none; }
+  .auth-card { border-radius: 20px; padding: 26px; margin-top: 18px; }
+  .auth-card h2 { font-size: 24px; }
+  .brand-welcome { padding: 24px; min-height: 190px; border-radius: 18px; }
+  .brand-welcome-copy { max-width: 90%; }
+  .brand-welcome-dragon { right: -65px; width: 225px; opacity: .23; }
+  .brand-welcome h2 { font-size: 28px; }
+  .brand-welcome p { font-size: 12px; }
+  .page-actions { width: 100%; }
+  .workspace-task-card { padding: 22px 14px 16px; gap: 12px; min-height: 108px; align-items: center; }
+  .workspace-task-icon svg { width: 25px; height: 25px; }
+  .workspace-task-copy { padding-right: 0; gap: 7px; }
+  .workspace-task-copy strong { font-size: 14px; }
+  .workspace-task-copy small { font-size: 11px; line-height: 1.5; }
+  .workspace-task-tag { top: 8px; right: 9px; font-size: 9px; }
+  .workspace-task-grid { gap: 10px; }
+  .panel-head { padding: 19px 18px 16px; }
+  .panel-body, .panel.panel-body { padding: 18px; }
+  .account-row { margin-left: 18px; margin-right: 18px; }
+  .topbar { row-gap: 12px; }
+  .kpi-card { min-height: 136px; padding: 18px; }
+  .kpi-label { font-size: 12px; }
+  .kpi-label > svg { width: 17px; height: 17px; }
+  .kpi-value { font-size: clamp(21px, 4.9vw, 28px); }
+  .summary-strip { gap: 14px 20px; }
+}
+@media (max-width: 380px) {
+  .kpi-card { padding: 15px 12px; }
+  .kpi-meta { font-size: 10px; }
+  .workspace-task-card { gap: 9px; padding-left: 11px; padding-right: 11px; }
+  .workspace-task-icon svg { width: 22px; height: 22px; }
+  .workspace-task-copy strong { font-size: 13px; }
+  .workspace-task-copy small { font-size: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .workspace-task-card { transition: none; }
+  .workspace-task-card:active { transform: none; }
+}
+@media print {
+  .brand-welcome, .workspace-shortcuts { display: none; }
+  .kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .panel, .kpi-card, .summary-strip, .profit-head { background: #fff; color: #2A1F1B; }
+}

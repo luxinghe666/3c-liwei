@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#5268dc">
+  <title>龍成ERP · 业务协同</title>
+  <link rel="icon" href="/assets/longcheng-erp-icon.png" type="image/png"><link rel="apple-touch-icon" href="/assets/longcheng-erp-icon.png">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./app.css">
+  <link rel="stylesheet" href="./auth.css">
+  <link rel="stylesheet" href="./workflows.css">
+  <link rel="stylesheet" href="./theme.css">
+  <link rel="stylesheet" href="./galaxy.css">
+  <link rel="stylesheet" href="./erp.css">
+  <script src="./appearance.js"></script>
+  <link rel="stylesheet" href="/employee-profile.css">
+</head>
+<body>
+  <div class="app-shell">
+    <button class="sidebar-overlay" id="overlay" aria-label="关闭导航"></button>
+    <aside class="sidebar" id="sidebar">
+      <a href="#tasks" class="brand" aria-label="龍成ERP业务协同"><img class="brand-mark" src="/assets/longcheng-erp-icon.png" alt="" width="36" height="36"><span><span class="brand-name">龍成ERP</span><span class="brand-sub">采购 · 销售 · 仓储</span></span></a>
+      <div class="nav-section"><h3>业务协同</h3><nav id="nav" aria-label="业务导航"></nav></div>
+      <a class="nav-item" href="/wecom-order.html">企业微信待办</a>
+      <a id="workbenchLink" class="nav-item" href="/">← 返回原工作台</a>
+      <div class="sidebar-bottom"><div class="sidebar-note">共享任务 · 每 15 秒更新<small id="lastSync">正在连接</small></div><div class="sidebar-foot"><span class="avatar">业</span><div><strong id="roleName">正在读取账号</strong><small id="revision">连接中</small></div><button class="button ghost small" data-action="logout">退出</button></div></div>
+    </aside>
+    <div class="workspace">
+      <header class="topbar"><div class="row"><button id="menuButton" class="mobile-menu button ghost" aria-label="打开导航">☰</button><div class="breadcrumb">工作空间 <span>/</span> <strong id="crumb">业务协同</strong></div></div><div class="topbar-actions"><label class="appearance-picker"><span class="sr-only">网页外观</span><select data-appearance-control aria-label="网页外观"><option value="system">跟随系统</option><option value="light">浅色</option><option value="dark">深色</option></select></label><button class="button secondary small" data-action="refresh">刷新</button></div></header>
+      <main id="main" tabindex="-1"><div class="galaxy-loading" role="status"><span class="galaxy-loader" aria-hidden="true"></span><div><strong>正在读取业务协同</strong><p>订单、串号和收发货任务共用公司账本。</p></div></div></main>
+      <footer class="app-footer">每次操作记录实际经办人 · 仓库与直发分别追溯<div class="site-filing"><span>郑州原拓商贸有限公司</span><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">豫ICP备2026052814号-1</a></div></footer>
+    </div>
+  </div>
+  <dialog id="modal" class="modal erp-modal" aria-labelledby="modalTitle"></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <noscript><p>业务协同需要启用 JavaScript。</p></noscript>
+  <script type="module" src="./erp.js"></script>
+</body>
+</html>

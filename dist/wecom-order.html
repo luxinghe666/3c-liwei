@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#4659d6">
+  <title>企业微信待办 · 龍成ERP</title>
+  <link rel="icon" href="/assets/longcheng-erp-icon.png" type="image/png">
+  <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/app.css"><link rel="stylesheet" href="/theme.css"><link rel="stylesheet" href="/galaxy.css"><link rel="stylesheet" href="/wecom-order.css">
+  <script src="/appearance.js"></script>
+</head>
+<body class="wecom-order-page">
+  <main class="wecom-order-layout">
+    <header class="wecom-order-header"><a class="brand" href="/" id="orderWorkbench"><img class="brand-mark" src="/assets/longcheng-erp-icon.png" alt="" width="40" height="40"><span class="brand-name">龍成ERP</span></a><label class="appearance-picker"><span class="sr-only">网页外观</span><select data-appearance-control aria-label="网页外观"><option value="system">跟随系统</option><option value="light">浅色</option><option value="dark">深色</option></select></label></header>
+    <section class="wecom-order-intro"><p class="wecom-order-eyebrow">企业微信 · 订单协同</p><h1 id="orderTitle">订单待办</h1><p id="orderIdentity" class="wecom-order-muted">正在验证当前账号…</p></section>
+    <p id="orderTestBanner" class="wecom-order-test" hidden>测试联调 · 测试订单仅供核对流程，不执行真实付款</p>
+    <nav class="wecom-order-actions" aria-label="订单操作"><button id="orderRefresh" class="button primary" type="button">刷新状态</button><a href="/wecom-order.html" id="orderTaskList" class="button secondary" hidden>全部可见待办</a><a href="/" id="orderBack" class="button secondary">返回工作台</a></nav>
+    <p id="orderStatus" role="status" aria-live="polite" class="wecom-order-muted">正在连接…</p>
+    <div id="orderContent" aria-busy="true"></div>
+    <footer class="wecom-order-footer">岗位权限由 ERP 管理。通知和企业微信职务不会改变可查看的数据。</footer>
+  </main>
+  <noscript><p>请启用 JavaScript 后查看订单待办。</p></noscript>
+  <script type="module" src="/wecom-order.js"></script>
+</body>
+</html>

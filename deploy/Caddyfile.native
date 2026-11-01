@@ -1,0 +1,11 @@
+# Install/enable only after ICP filing, owner initialization and public-access approval.
+{
+    email 1921344174@qq.com
+    admin off
+}
+finance.yuantuo.vip {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:4318 {
+        header_up X-Finance-Client-IP {remote_host}
+    }
+}

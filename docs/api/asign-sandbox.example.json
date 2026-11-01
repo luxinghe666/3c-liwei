@@ -1,0 +1,33 @@
+{
+  "environment": "sandbox",
+  "localTest": true,
+  "appId": "REPLACE_WITH_TEST_APP_ID",
+  "privateKeyFile": ".test-data/asign/keys/private.pem",
+  "platformPublicKeyFile": ".test-data/asign/keys/platform.pem",
+  "callbackUrl": "https://wecom-test.yuantuo.vip/api/asign/callback",
+  "buyerName": "ERP联调测试买方",
+  "templates": [
+    {
+      "id": "purchase-test",
+      "version": "1",
+      "providerNo": "REPLACE_WITH_SYNCED_TEST_TEMPLATE_ID",
+      "fillKeys": {
+        "orderNo": "orderNo",
+        "buyer": "buyer",
+        "supplier": "supplier",
+        "date": "date",
+        "lines": "lines",
+        "total": "total"
+      }
+    }
+  ],
+  "signers": [
+    {
+      "supplierId": "REPLACE_WITH_ISOLATED_TEST_SUPPLIER_ID",
+      "account": "REPLACE_WITH_AUTHENTICATED_TEST_SIGNER",
+      "erpUserId": "REPLACE_WITH_APPROVED_TEST_ERP_USER_ID",
+      "clientId": "REPLACE_WITH_TEST_MINI_CLIENT_ID",
+      "actorId": "REPLACE_WITH_MAPPED_TEST_MERCHANT_ACTOR"
+    }
+  ]
+}

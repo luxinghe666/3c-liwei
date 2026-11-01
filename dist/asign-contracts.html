@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>合同管理 · 原拓ERP测试</title><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/app.css"><link rel="stylesheet" href="/theme.css"><link rel="stylesheet" href="/wecom-order.css"><script src="/appearance.js"></script></head>
+<body class="wecom-order-page"><main class="wecom-order-layout">
+<header class="wecom-order-header"><a href="/wecom-order.html">返回订单待办</a><a href="/">工作台</a></header>
+<section class="wecom-order-intro"><h1>采购合同</h1><p class="wecom-order-test">爱签沙箱 · 仅使用隔离测试订单，不执行实际交易或付款。</p></section>
+<p id="notice" role="status" aria-live="polite">正在验证登录身份…</p>
+<section id="controls" class="wecom-order-card" hidden><label>采购订单 <select id="orders"></select></label><button id="refresh" class="button secondary">刷新</button><div id="summary"></div><label>测试合同模板 <select id="templates"></select></label><p><button id="create" class="button primary">发起测试签署</button></p><p>原合同拒签或终止后才能发起新版本，保留旧合同记录。发票状态单独管理。</p></section>
+<div id="history"></div></main><script type="module" src="/asign-contracts.js"></script></body></html>

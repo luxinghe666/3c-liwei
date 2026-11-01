@@ -1,0 +1,29 @@
+{
+  "name": "3c-finance-workspace",
+  "version": "0.6.1",
+  "private": true,
+  "type": "module",
+  "description": "龍成ERP：3C 供应链账本与 iPhone 客户端开发版",
+  "scripts": {
+    "start": "node server/start.mjs",
+    "test": "node --test model.test.mjs regression.test.mjs operations.test.mjs accounts.test.mjs daily-profit.test.mjs proxy.test.mjs quantity.test.mjs notifications.test.mjs server.test.mjs roles.test.mjs erp.test.mjs erp-payment.test.mjs erp-sync.test.mjs role-access.test.mjs integration-auth.test.mjs wecom.test.mjs wecom-web.test.mjs",
+    "test:offline": "node --test model.test.mjs regression.test.mjs operations.test.mjs accounts.test.mjs daily-profit.test.mjs proxy.test.mjs quantity.test.mjs notifications.test.mjs roles.test.mjs erp.test.mjs erp-payment.test.mjs erp-sync.test.mjs role-access.test.mjs integration-auth.test.mjs wecom.test.mjs",
+    "check": "node --check dist/app.js && node --check server/app.mjs && node --check server/client-ip.mjs && node --check server/start.mjs && node --check dist/login.js && node --check server/init.mjs && node --check server/health.mjs && node --check scripts/make-ios-project.mjs && node --check dist/workflows.js && node --check dist/insights.js && node --check server/corrections.mjs && node --check server/operations.mjs && node --check dist/stock.js && node --check server/notifications.mjs && node --check server/push.mjs && node --check dist/feedback.js && node --check dist/appearance.js && node --check dist/roles.js && node --check dist/stock-workspace.js && node --check server/permissions.mjs && node --check server/user-roles-migration.mjs && node --check server/erp.mjs && node --check server/erp-payment.mjs && node --check server/erp-sync.mjs && node --check server/integration-auth.mjs && node --check server/role-access.mjs && node --check dist/erp.js && node --check server/wecom.mjs && node --check dist/employee-profile.js && node --check dist/wecom-waiting.js",
+    "test:swift": "sh scripts/test-swift-core.sh",
+    "ios:project": "node scripts/make-ios-project.mjs",
+    "ios:archive": "sh scripts/archive-ios.sh",
+    "ios:preflight": "node scripts/preflight-ios.mjs",
+    "ios:preflight:release": "node scripts/preflight-ios.mjs --require-release",
+    "test:ios-preflight": "node --test scripts/preflight-ios.test.mjs",
+    "test:wecom": "node --test wecom.test.mjs wecom-web.test.mjs",
+    "test:wecom:orders": "node --test wecom.test.mjs wecom-web.test.mjs wecom-order-notifications.test.mjs wecom-order-http.test.mjs wecom-order-ui.test.mjs",
+    "dealer:local": "node scripts/run-dealer-local.mjs",
+    "test:dealer:http": "node --test dealer-http.test.mjs",
+    "test:dealer:multi": "node --test dealer-multi-http.test.mjs dealer-multi-api.test.mjs",
+    "test:dealer:regression": "node --test dealer-api.test.mjs dealer-http.test.mjs dealer-multi-api.test.mjs dealer-multi-http.test.mjs scripts/api-contract/*.test.mjs",
+    "dev:cloud": "node scripts/start-cloud-dev.mjs"
+  },
+  "engines": {
+    "node": ">=24.13.0"
+  }
+}
